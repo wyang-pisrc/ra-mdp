@@ -9,7 +9,7 @@
 
 ### DB
 
-- Contains information one retrieving and using data from the MDP server
+- Contains information on retrieving and using data from the MDP server
 - MDP server IP: `104.43.220.142`
 - PiSrc folder location: `/usr/local/src/pisrc`
 - Database (MSSQL) URL: `sqlsvr-0092-mdp-02.85f8a2f57eaf.database.windows.net`
