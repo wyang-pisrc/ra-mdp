@@ -1,0 +1,10 @@
+# general
+.DS_Store
+.vscode
+
+# auth files
+*.secret
+
+# python
+.venv
+.ipynb_checkpoints
