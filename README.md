@@ -2,6 +2,18 @@
 
 ## Dev Notes
 
+- Python version: `> 3.10`
+  - Recommended initialization:
+    ```sh
+    python3 -m venv .venv
+    source .venv/bin/activate
+    
+    python -m pip install pip --upgrade
+    python -m pip install wheel
+    
+    # note that api and db have different requirements.txt
+    python -m pip install -r requirements.txt
+    ```
 - Python formatting provider: `black`
 - SQL formatting provider: `SQLTools` VS code extension
 

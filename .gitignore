@@ -8,3 +8,7 @@
 # python
 .venv
 .ipynb_checkpoints
+__pycache__
+
+# version managers
+.tool-versions
