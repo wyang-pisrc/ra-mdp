@@ -20,6 +20,8 @@
 
 - `analytics-api.ipynb`: Shows how to access Eloqua and Adobe Analytics APIs in Python
 
-### Exploratory Data Analysis
+### One-off projects
 
-- Contains code to generate data for a presentation
+- Data collection for specific presentations or inquiries:
+  - `Exploratory-data-analysis`
+  - `Lead-status`
