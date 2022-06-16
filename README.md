@@ -19,6 +19,10 @@
 
 ## Project structure
 
+### API
+
+- `analytics-api.ipynb`: Shows how to access Eloqua and Adobe Analytics APIs in Python
+
 ### DB
 
 - Contains information on retrieving and using data from the MDP server
@@ -28,12 +32,10 @@
 - To access the database: `sqlcmd -S sqlsvr-0092-mdp-02.85f8a2f57eaf.database.windows.net`
 - `analytics-db.ipynb`: Shows how to access MDP information and relevant tables
 
-### API
+### Engagement scoring
 
-- `analytics-api.ipynb`: Shows how to access Eloqua and Adobe Analytics APIs in Python
+- Binge experience engagement scoring implementation
 
-### One-off projects
+### Misc projects
 
-- Data collection for specific presentations or inquiries:
-  - `Exploratory-data-analysis`
-  - `Lead-status`
+- Data collection for specific presentations or inquiries
