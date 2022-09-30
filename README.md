@@ -5,14 +5,8 @@
 - Python version: `> 3.10`
   - Recommended initialization:
     ```sh
-    python3 -m venv .venv
-    source .venv/bin/activate
-    
-    python -m pip install pip --upgrade
-    python -m pip install wheel
-    
-    # note that api and db have different requirements.txt
-    python -m pip install -r requirements.txt
+    python3 -m pip install --user pipenv
+    python3 -m pipenv install
     ```
 - Python formatting provider: `black`
 - SQL formatting provider: `SQLTools` VS code extension
@@ -22,6 +16,7 @@
 ### API
 
 - `analytics-api.ipynb`: Shows how to access Eloqua and Adobe Analytics APIs in Python
+- Note: still uses its own `requirements.txt` (TODO: transfer to pipenv)
 
 ### DB
 
