@@ -12,3 +12,4 @@ __pycache__
 
 # version managers
 .tool-versions
+*.csv
