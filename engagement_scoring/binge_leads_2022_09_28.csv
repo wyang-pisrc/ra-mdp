@@ -1,71 +1,118 @@
 ,EmailAddress,ra_leadstage,BingeId,BingeName,BingeCampaignId,BingeCriticalScore,BingeScoredAsset,BingeScoredAssetPath,BingeScoredAssetScore
-0,alec.stull@cmcmaterials.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-1,alex.fonseca@ingredion.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-2,andrewbriones@kennedyjenks.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-3,arosa@bama.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-4,arturo.quispe@incontrolgroup.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-5,atanvir@mcg-pyle.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-6,b.church@krltd.ca,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-7,bchaury@matrixti.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-8,bodnarmatt@bfusa.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-9,bruno_depizzol@br.ajinomoto.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-10,bruno_depizzol@br.ajinomoto.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-11,buran@horlick.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-12,chapin@clackcorp.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-13,CHESTER.BURKE@CADENCEINC.COM,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-14,chris.baerenwald@andersencorp.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-15,christian.francoeur@cegepsherbrooke.qc.ca,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-16,christinejoy.panganiban@gnpts.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-17,cristobal.escoto@ecnautomation.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-18,d.dinh@brs-electrical.com.au,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-19,derek.hnatiw@nutrien.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-20,dsc_26@hotmail.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Generating a Report (30 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Generating a Report.pdf,1
-21,dsimpkins@renegadesol.com,7,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-22,ecruz@propesa.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-23,ecuarite@techlogic-group.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-24,ErickGutierrez@eaton.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-25,givaldo.soares@harald.com.br,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-26,graham.goode@jacobs.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-27,hdelacruz@seiter.com.do,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-28,henri.ledee@techneaux.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-29,ivan.rojas@omnicon.co,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-30,jaime.otero@basf.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-31,Jan.Wirkus@Luxfer.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-32,joseh02@amgen.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-33,karl.smith@corteva.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-34,kmandachit@huffmaneng.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-35,ksullivan@magnumdesignsllc.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-36,kyle.ambroso@libertysteel.us,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-37,kyle.beckner@eadcorporate.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-38,kyle.beckner@eadcorporate.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
-39,Lebogang.Mogatosi@sibanyestillwater.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-40,LEOBUTLER@TBE.IE,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-41,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,,,
-42,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,Bring more power to electric vehicle and battery production,/content/dam/rockwell-automation/sites/downloads/pdf/auto-sp010_-en-p.pdf,3
-43,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,Hirata Boosts Efficiency With Emulation Software,/content/rockwell-automation/www/na/us/en_US/company/news/case-studies/hirata-emulation-software.html,3
-44,m.msezane@interroll.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-45,MaintScadaSupervisor_YEMFLD@petromasila.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-46,MARKFEREBEE@CELGARD.NET,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-47,meetdddesai@gmail.com,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-48,meetdddesai@gmail.com,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
-49,mgouvea@admabio.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-50,michael.miranda@enercon-eng.com.sg,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-51,mlabrash@foriauto.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-52,nszalay@femc.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-53,pravinj@jendamark.in,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-54,quinonezleonardo@la-bridgestone.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-55,rahul.shah@pima.in,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Export a BOM to ProposalWorks (20 minutes, 25 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Export a BOM to ProposalWorks.pdf,1
-56,ronaldo.santos@wtecc.com.br,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-57,sanjaykumar.desai@taiengineering.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-58,sasa.kajkut@bluescopesteel.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-59,scott.mondschein@sunopta.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-60,tarik.chakri@safiec.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-61,tienie.devilliers@sasol.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-62,tim.campbell@dart.biz,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-63,Timothy.Crane@CarlisleCCM.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-64,Timothy.Crane@CarlisleCCM.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
-65,Timothy.Crane@CarlisleCCM.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
-66,Timothy.Crane@CarlisleCCM.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Using the Architecture View (30 minutes, 38 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Using the Architecture View.pdf,1
-67,tisha.lane@adaptecsolutions.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-68,win_tsai@solomon.com.tw,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
-69,zkitt@brfoods.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+0,agarcia@metrikalab.com.mx,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+1,alberto.simbahon@stelco.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+2,alec.stull@cmcmaterials.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+3,alex.fonseca@ingredion.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+4,anders.l.johansson@profilgruppen.se,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+5,andrewbriones@kennedyjenks.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+6,aneely@oceaneering.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+7,arosa@bama.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+8,arturo.quispe@incontrolgroup.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+9,atanvir@mcg-pyle.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+10,b.church@krltd.ca,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+11,bchaury@matrixti.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+12,bodnarmatt@bfusa.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+13,brb@zepnick.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+14,brent.donovan@actemium.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+15,brent.donovan@actemium.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
+16,brent.donovan@actemium.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Using the Architecture View (30 minutes, 38 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Using the Architecture View.pdf,1
+17,bruno_depizzol@br.ajinomoto.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+18,bruno_depizzol@br.ajinomoto.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+19,buran@horlick.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+20,chapin@clackcorp.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+21,CHESTER.BURKE@CADENCEINC.COM,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+22,chris.baerenwald@andersencorp.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+23,christian.francoeur@cegepsherbrooke.qc.ca,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+24,christinejoy.panganiban@gnpts.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+25,Clay.Hurst@Lhoist.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+26,cristobal.escoto@ecnautomation.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+27,d.dinh@brs-electrical.com.au,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+28,daniel.vail@algenol.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+29,daniel.vail@algenol.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+30,daniel_gagnon-gordillo@barry-callebaut.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+31,dave@panamenv.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+32,denis.cousin@toyotafr.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+33,derek.hnatiw@nutrien.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+34,dsc_26@hotmail.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Generating a Report (30 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Generating a Report.pdf,1
+35,dsimpkins@renegadesol.com,7,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+36,ecruz@propesa.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+37,ecuarite@techlogic-group.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+38,elnibe@biofac.dk,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+39,ErickGutierrez@eaton.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+40,fallievi25@outlook.it,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+41,fmazzetto@itaca-eng.it,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+42,gardnerc@exponentialengineering.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Using the Architecture View (30 minutes, 38 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Using the Architecture View.pdf,1
+43,givaldo.soares@harald.com.br,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+44,graham.goode@jacobs.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+45,hdelacruz@seiter.com.do,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+46,henri.ledee@techneaux.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+47,ivan.rojas@omnicon.co,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+48,jaime.otero@basf.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+49,Jan.Wirkus@Luxfer.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+50,jason.kalaygian@thermosystems.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+51,jason.lainhart@haskell.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+52,jeff.bruinsma@mgnewell.com,7,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+53,JEFFREY.HOUSER@BRADMANLAKE.COM,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+54,jglenski@plusgroups.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+55,joseh02@amgen.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+56,jsenn@scotindustries.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+57,karl.smith@corteva.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+58,ken.wesley@uiscorp.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+59,kgaraffa@bellisiofoods.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
+60,kgaraffa@bellisiofoods.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Export a BOM to ProposalWorks (20 minutes, 25 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Export a BOM to ProposalWorks.pdf,1
+61,kmandachit@huffmaneng.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+62,ksullivan@magnumdesignsllc.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+63,kyle.ambroso@libertysteel.us,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+64,kyle.beckner@eadcorporate.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+65,kyle.beckner@eadcorporate.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
+66,layne.pyfer@pyferautomation.com,7,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Using the Architecture View (30 minutes, 38 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Using the Architecture View.pdf,1
+67,Lebogang.Mogatosi@sibanyestillwater.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+68,LEOBUTLER@TBE.IE,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+69,leonard.smith@tylerpipe.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+70,leonard.smith@tylerpipe.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
+71,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,,,
+72,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,Bring more power to electric vehicle and battery production,/content/dam/rockwell-automation/sites/downloads/pdf/auto-sp010_-en-p.pdf,3
+73,luke.anderson@solidpowerbattery.com,2,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,Hirata Boosts Efficiency With Emulation Software,/content/rockwell-automation/www/na/us/en_US/company/news/case-studies/hirata-emulation-software.html,3
+74,m.msezane@interroll.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+75,mahyar.farahmand@cmcmaterials.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+76,MaintScadaSupervisor_YEMFLD@petromasila.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+77,mark.svenjak@outlook.com,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+78,MARKFEREBEE@CELGARD.NET,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+79,matt.dellinger@dsiinnovations.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+80,mblankenship@x-energy.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+81,meetdddesai@gmail.com,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+82,meetdddesai@gmail.com,1,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
+83,mgouvea@admabio.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+84,michael.miranda@enercon-eng.com.sg,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+85,mlabrash@foriauto.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+86,nick_livengood@castlehilltech.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+87,n-kakutani@tam-tokyo.co.jp,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+88,nszalay@femc.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+89,panneerselvam@deltacontrols.ae,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+90,pravinj@jendamark.in,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+91,quinonezleonardo@la-bridgestone.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+92,rahul.shah@pima.in,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Export a BOM to ProposalWorks (20 minutes, 25 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Export a BOM to ProposalWorks.pdf,1
+93,reuben@vtxauto.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
+94,ronaldo.santos@wtecc.com.br,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+95,sanjaykumar.desai@taiengineering.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+96,sarawut.focusautomation@gmail.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
+97,sasa.kajkut@bluescopesteel.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+98,scott.mondschein@sunopta.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+99,skalnikovakatka@gmail.com,3,be1654108452838784,The Race to Electric Vehicle Production is Here,CMP-04453-F5G5H2,2.0,Bring more power to electric vehicle and battery production,/content/dam/rockwell-automation/sites/downloads/pdf/auto-sp010_-en-p.pdf,3
+100,sterling.patterson@lhoist.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+101,tanaka.hideaki@jgc.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+102,tarik.chakri@safiec.com,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+103,tienie.devilliers@sasol.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+104,tim.campbell@dart.biz,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+105,Timothy.Crane@CarlisleCCM.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+106,Timothy.Crane@CarlisleCCM.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Applying Pricing to BOM (20 minutes, 15 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Applying Pricing to BOM.pdf,1
+107,Timothy.Crane@CarlisleCCM.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+108,Timothy.Crane@CarlisleCCM.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Using the Architecture View (30 minutes, 38 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Using the Architecture View.pdf,1
+109,tisha.lane@adaptecsolutions.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+110,todd.zimmerman@xyleminc.com,3,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+111,viktors.dzelme@bsci.com,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Getting Started in IAB (85 minutes, 121 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Getting Started in IAB.pdf,1
+112,vilmar.teixeira@faurecia.com,7,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+113,win_tsai@solomon.com.tw,5,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+114,z.jakas@biovast.lt,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
+115,z.jakas@biovast.lt,4,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,"Project Design Assistant (30 minutes, 30 pages)",/content/dam/rockwell-automation/sites/downloads/pdf/Project Design Assistant.pdf,1
+116,zkitt@brfoods.com,2,be1650550449644850,Basic Functionality Labs,builder_labs,5.0,,,
