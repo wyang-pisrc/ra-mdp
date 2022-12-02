@@ -11,6 +11,7 @@ pandas = "*"
 sklearn = "*"
 black = "*"
 pyodbc = "*"
+Pyzmq = "==19.0.2"
 
 [dev-packages]
 
