@@ -31,7 +31,8 @@ CREATE INDEX email_idx ON eloqua_data (EmailAddress);
 
 6. python importEloquaData.py
 
-7. CREATE TABLE `aem_data` (
+7. Table holds raw Adobe Analytics data
+CREATE TABLE `aem_data` (
   `DateTime` datetime DEFAULT NULL,
   `PageURL` varchar(256) NOT NULL,
   `EloquaContactId` varchar(32) DEFAULT NULL,
@@ -43,11 +44,8 @@ CREATE INDEX email_idx ON eloqua_data (EmailAddress);
 
 8. python importAEMData.py
 
-----
-9. 
+9.  Table to hold Adobe Analytics data deduplicated by hour
 
-Table hold Adobe Analytics data deduplicated by hour
-----
 CREATE TABLE `aem_data_hour` (
   `DateTime` datetime DEFAULT NULL,
   `PageURL` varchar(256) NOT NULL,
@@ -57,7 +55,7 @@ CREATE TABLE `aem_data_hour` (
   UNIQUE KEY `visitMomentConstraint` (`DateTime`,`PageURL`,`mcvisid`),
   KEY `eloqua_idx` (`EloquaContactId`),
   KEY `mcvisid_idx` (`mcvisid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 set autocommit=1;
 INSERT IGNORE INTO aem_data_hour
@@ -67,16 +65,14 @@ SELECT DATE_FORMAT(DateTime, '%Y-%m-%d %H'), PageURL, EloquaContactId, mcvisid, 
 3169387 records with EloquaContactId
 12728971 records without EloquaContactId
 
-
-
-
+10. 
 Holds a mapping of analytics id with eloqua id
 ----
 CREATE TABLE `aem_map` (
   `EloquaContactId` varchar(32) NOT NULL,
   `mcvisid` varchar(64) NOT NULL,
   PRIMARY KEY (`EloquaContactId`,`mcvisid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 set autocommit=1;
@@ -85,6 +81,7 @@ SELECT DISTINCT EloquaContactId, mcvisid FROM aem_data_hour WHERE EloquaContactI
 
 166971 records
 
+11.
 Holds a mapping of pages without country site differentiation
 with their analytics id, back-dated eloqua id, and back-dated lead id
 ----
@@ -111,6 +108,7 @@ WHERE a.PageURL like 'https://www.rockwellautomation.com%';
 
 15538423 records
 
+12.
 Holds a mapping of crm lead id with eloqua id
 ----
 CREATE TABLE `lead_map` (
@@ -128,10 +126,12 @@ select distinct e.EloquaContactId, e.EmailAddress, c.leadid from eloqua_data e, 
 
 194951 records
 
+13.
 update lead_map set opportunity = 1 where leadid in (select distinct c.leadid from eloqua_data e, crm_data c where e.EmailAddress = c.emailaddress1 AND c.ra_leadstagename in ('Awaiting Sales Acceptance',  'Qualified', 'Awaiting Tele Acceptance', 'Distributor Lead', 'External Lead') );
 
 82948 records
 
+13.
 Populate previously created aem_eloqua_crm empty leadid fields with applicable leadids from the lead_map
 ----
 UPDATE aem_eloqua_crm a, lead_map l SET a.goodLeadId = l.leadid, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = 1;
@@ -141,6 +141,7 @@ UPDATE aem_eloqua_crm a, lead_map l SET a.badLeadId = l.leadid, a.EmailAddress =
 425574 records
 
 
+14. 
 CREATE TABLE `counts` (
   `PageURL` varchar(256),
   `total` INT DEFAULT 0,
@@ -162,5 +163,6 @@ ON a.PageURL = lbad.PageURL;
 469836 records
 
 
-SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS eRatio, crmGood/total AS lgRatio, crmBad/total AS lbRatio FROM counts WHERE total > 100 ORDER BY total DESC INTO OUTFILE '/Users/ikim/output-count.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ';' ESCAPED BY '"' LINES TERMINATED BY '\n';
+15.
+SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS eRatio, crmGood/total AS lgRatio, crmBad/total AS lbRatio FROM counts WHERE total > 100 ORDER BY total DESC INTO OUTFILE '/Users/ikim/output-count-month-only.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ';' ESCAPED BY '"' LINES TERMINATED BY '\n';
 
