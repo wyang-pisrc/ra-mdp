@@ -6,16 +6,6 @@ import socket, struct
 from dateutil.parser import parse
 from datetime import datetime
 
-"""
-CREATE TABLE `eloqua_data` (
-	`EloquaContactId` VARCHAR(32) NOT NULL,
-	`EmailAddress` VARCHAR(128) NOT NULL,
-    PRIMARY KEY(EloquaContactId)
-) DEFAULT CHARSET=utf8mb4;
-
-CREATE INDEX email_idx ON eloqua_data (EmailAddress);
-"""
-
 badEmails = ["rockwellautomation","@pisrc.com","@bounteous.com","@ra.rockwell.com","demandbaseexport"]
 
 mydb = pymysql.connect(host='localhost',
@@ -29,11 +19,6 @@ cursor = mydb.cursor()
 
 csv_data = csv.reader(open('elq_all_bridge-only.csv', 'r'))
 next(csv_data)
-"""
-,EloquaContactId,EmailAddress
-0,CRACP000008935001,!!Edson.Carlos!!@ensinger.co.uk
-
-"""
 
 stmt = 'INSERT INTO eloqua_data (EloquaContactId, EmailAddress) VALUES (%s, %s)'
 

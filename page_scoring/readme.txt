@@ -1,33 +1,32 @@
-1. create database page_scoring;
+1. CREATE DATABASE page_scoring;
 
-2. use page_scoring;
+2. USE page_scoring;
 
 3. CREATE TABLE `crm_data` (
-    `leadid` VARCHAR(255) NOT NULL,
-    `emailaddress1` VARCHAR(64) NULL,
-    `firstname` VARCHAR(64) NULL,
-    `lastname` VARCHAR(128) NULL,
-    `jobtitle` VARCHAR(128) NULL,
-    `companyname` VARCHAR(128) NULL,
-    `ra_leadstagename` VARCHAR(32) NULL,
-    `ra_salesrejectionreasonname` VARCHAR(128) NULL,
-    `ra_telerejectionreasonname` VARCHAR(128) NULL,
-    `address1_country` VARCHAR(32) NULL,
-    PRIMARY KEY(leadid)
-) DEFAULT CHARSET=utf8mb4;
+  `leadid` varchar(255) NOT NULL,
+  `emailaddress1` varchar(64) DEFAULT NULL,
+  `firstname` varchar(64) DEFAULT NULL,
+  `lastname` varchar(128) DEFAULT NULL,
+  `jobtitle` varchar(128) DEFAULT NULL,
+  `companyname` varchar(128) DEFAULT NULL,
+  `ra_leadstagename` varchar(32) DEFAULT NULL,
+  `ra_salesrejectionreasonname` varchar(128) DEFAULT NULL,
+  `ra_telerejectionreasonname` varchar(128) DEFAULT NULL,
+  `address1_country` varchar(32) DEFAULT NULL,
+  PRIMARY KEY (`leadid`),
+  KEY `crm_email_idx` (`emailaddress1`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
-grant all privileges on page_scoring.* to 'rockwell'@'localhost';
-CREATE INDEX crm_email_idx ON crm_data(emailaddress1);
+GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
 
 4. python importCrmData.py
 
 5. CREATE TABLE `eloqua_data` (
-    `EloquaContactId` VARCHAR(32) NOT NULL,
-    `EmailAddress` VARCHAR(128) NOT NULL,
-    PRIMARY KEY(EloquaContactId)
-) DEFAULT CHARSET=utf8mb4;
-
-CREATE INDEX email_idx ON eloqua_data (EmailAddress);
+  `EloquaContactId` varchar(32) NOT NULL,
+  `EmailAddress` varchar(128) NOT NULL,
+  PRIMARY KEY (`EloquaContactId`),
+  KEY `email_idx` (`EmailAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 6. python importEloquaData.py
 
@@ -59,7 +58,7 @@ CREATE TABLE `aem_data_hour` (
 
 set autocommit=1;
 INSERT IGNORE INTO aem_data_hour
-SELECT DATE_FORMAT(DateTime, '%Y-%m-%d %H'), PageURL, EloquaContactId, mcvisid, GeoCountry FROM aem_data;
+SELECT DATE_FORMAT(DateTime, '%Y-%m-%d %H'), REGEXP_REPLACE(PageURL, '#.*$', ''), EloquaContactId, mcvisid, GeoCountry FROM aem_data;
 
 15898358 records total
 3169387 records with EloquaContactId
@@ -101,11 +100,26 @@ CREATE TABLE `aem_eloqua_crm` (
 
 set autocommit=1;
 INSERT INTO aem_eloqua_crm (DateTime, PageURL, EloquaContactId, mcvisid, GeoCountry)
-SELECT a.DateTime, regexp_replace(trim(leading 'https://www.rockwellautomation.com' from (trim(leading 'https://www.rockwellautomation.com.cn' from a.PageURL))), '/[a-z][a-z][_-][a-z][a-z]/' , '/'), e.EloquaContactId, a.mcvisid, a.GeoCountry from aem_data_hour AS a
+SELECT a.DateTime, a.flatURL, e.EloquaContactId, a.mcvisid, a.GeoCountry FROM (
+    SELECT DateTime, REGEXP_REPLACE(
+        REGEXP_REPLACE(
+            REGEXP_REPLACE(
+                trim(leading 'https://www.rockwellautomation.com' FROM (
+                    trim(leading 'https://www.rockwellautomation.com.cn' from PageURL)
+                )), '/[a-z][a-z][_-][a-z][a-z][a-z]?/' , '/'
+            ), '#.*', ''
+        ), '//', '/'
+    ) AS flatURL, EloquaContactId, mcvisid, GeoCountry
+    FROM aem_data_hour
+    WHERE PageURL NOT REGEXP('/[a-z-]+.html') AND PageURL LIKE 'https://www.rockwellautomation.com%'
+) AS a
 LEFT JOIN aem_map AS e
 ON a.mcvisid=e.mcvisid
-WHERE a.PageURL like 'https://www.rockwellautomation.com%';
+WHERE
+    a.flatURL NOT REGEXP '(^/search.*|^/adfs/|^/404.html|^(http.*|file:.*)|https?:|.*\.gif$|.*\.page$|.*\.aspx$|.*\.js$|.*\.cfm$|^/\%.*|^/company.*|^/about_us.*|^/$|^/[^/]+$|^/[^/]+/$|/go/.*|change\-password)';
 
+
+3744005 records
 15538423 records
 
 12.
@@ -166,3 +180,11 @@ ON a.PageURL = lbad.PageURL;
 15.
 SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS eRatio, crmGood/total AS lgRatio, crmBad/total AS lbRatio FROM counts WHERE total > 100 ORDER BY total DESC INTO OUTFILE '/Users/ikim/output-count-month-only.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ';' ESCAPED BY '"' LINES TERMINATED BY '\n';
 
+
+---PDFs
+SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS etRatio, crmGood/eloqua AS geRatio, crmGood/crmBad AS gbRatio, crmGood/(crmGood+crmBad) AS crmGoodRatio, SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad)) AS error, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad))) as crmGoodRatioMuted FROM counts WHERE crmGood > 0 and crmBad > 0 AND total > 10 AND PageURL LIKE '%.pdf' ORDER BY crmGoodRatioMuted DESC
+INTO OUTFILE '/Users/ikim/rockwell-scores-pdfs.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
+
+---ALL
+SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS etRatio, crmGood/eloqua AS geRatio, crmGood/crmBad AS gbRatio, crmGood/(crmGood+crmBad) AS crmGoodRatio, SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad)) AS error, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad))) as crmGoodRatioMuted FROM counts WHERE crmGood > 10 and crmBad > 10 ORDER BY crmGoodRatioMuted DESC
+INTO OUTFILE '/Users/ikim/rockwell-scores-all.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
