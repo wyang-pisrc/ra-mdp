@@ -3,21 +3,26 @@ import pymysql
 import glob
 import re
 import socket, struct
+import configparser
 from dateutil.parser import parse
 from datetime import datetime
 
 badEmails = ["rockwellautomation","@pisrc.com","@bounteous.com","@ra.rockwell.com","demandbaseexport"]
 
-mydb = pymysql.connect(host='localhost',
-                             user='rockwell',
-                             password='rockwell',
-                             db='page_scoring',
-                             charset='utf8mb4')
+config = configparser.ConfigParser()
+config.sections()
+config.read('config.txt')
 
+mydb = pymysql.connect(host=config['database']['host'],
+                             user=config['database']['user'],
+                             password=config['database']['password'],
+                             db=config['database']['db'],
+                             charset='utf8mb4')
 
 cursor = mydb.cursor()
 
-csv_data = csv.reader(open('elq_all_bridge-only.csv', 'r'))
+csv_data = csv.reader(open(config['data-import']['datapath'] + 'elq_all_bridge-only.csv', 'r'))
+
 next(csv_data)
 
 stmt = 'INSERT INTO eloqua_data (EloquaContactId, EmailAddress) VALUES (%s, %s)'

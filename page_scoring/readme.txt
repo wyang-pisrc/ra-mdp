@@ -9,13 +9,17 @@
   `lastname` varchar(128) DEFAULT NULL,
   `jobtitle` varchar(128) DEFAULT NULL,
   `companyname` varchar(128) DEFAULT NULL,
+  `ra_generalengagementscore` varchar(12) DEFAULT NULL,
   `ra_leadstagename` varchar(32) DEFAULT NULL,
   `ra_salesrejectionreasonname` varchar(128) DEFAULT NULL,
   `ra_telerejectionreasonname` varchar(128) DEFAULT NULL,
+  `statecodename` varchar(16) DEFAULT NULL,
+  `statuscodename` varchar(42) DEFAULT NULL,
+  `ra_salesacceptedname` varchar(5) DEFAULT NULL,
   `address1_country` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`leadid`),
   KEY `crm_email_idx` (`emailaddress1`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
 

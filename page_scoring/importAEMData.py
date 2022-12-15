@@ -3,6 +3,7 @@ import pymysql
 import glob
 import re
 import socket, struct
+import configparser
 from dateutil.parser import parse
 from datetime import datetime
 
@@ -16,33 +17,37 @@ def isPattern(pattern, datestr):
   else:
     return False
 
-mydb = pymysql.connect(host='localhost',
-                             user='rockwell',
-                             password='rockwell',
-                             db='page_scoring',
-                             charset='utf8mb4')
+config = configparser.ConfigParser()
+config.sections()
+config.read('config.txt')
 
+mydb = pymysql.connect(host=config['database']['host'],
+                             user=config['database']['user'],
+                             password=config['database']['password'],
+                             db=config['database']['db'],
+                             charset='utf8mb4')
 
 cursor = mydb.cursor()
 
 files=[
-    "aemRaw_keyColumns_20221001-20221015.csv",
-    "aemRaw_keyColumns_20221015-20221031.csv",
-    "aemRaw_keyColumns_20220401-20220415.csv",
-    "aemRaw_keyColumns_20221101-20221115.csv",
-    "aemRaw_keyColumns_20220415-20220430.csv",
-    "aemRaw_keyColumns_20221115-20221130.csv",
-    "aemRaw_keyColumns_20220501-20220515.csv",
-    "aemRaw_keyColumns_20220515-20220531.csv",
-    "aemRaw_keyColumns_20220601-20220615.csv",
-    "aemRaw_keyColumns_20220615-20220630.csv",
-    "aemRaw_keyColumns_20220701-20220715.csv",
-    "aemRaw_keyColumns_20220715-20220731.csv",
-    "aemRaw_keyColumns_20220801-20220815.csv",
-    "aemRaw_keyColumns_20220815-20220831.csv",
-    "aemRaw_keyColumns_20220901-20220915.csv",
-    "aemRaw_keyColumns_20220915-20220930.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221001-20221015.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221015-20221031.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220401-20220415.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220415-20220430.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220501-20220515.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220515-20220531.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220601-20220615.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220615-20220630.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220701-20220715.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220715-20220731.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220801-20220815.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220815-20220831.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220901-20220915.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20220915-20220930.csv",
 ]
+
 
 
 for file in files:
