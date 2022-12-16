@@ -15,3 +15,6 @@ __pycache__
 *.csv
 *.xlsx
 *.pkl
+
+# local backup
+_history 
