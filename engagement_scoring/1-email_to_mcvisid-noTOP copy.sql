@@ -1,7 +1,7 @@
 WITH TMP1 AS (
 SELECT DISTINCT [EloquaContactId], [mcvisid]
 FROM [Staging].[aem].[RawTraffic]
-WHERE EloquaContactId <> '' AND VisitStartDateTime > '2022-04-21'
+WHERE EloquaContactId <> ''
 ), 
 
 TMP2 AS (

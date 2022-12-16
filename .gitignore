@@ -14,3 +14,4 @@ __pycache__
 .tool-versions
 *.csv
 *.xlsx
+*.pkl
