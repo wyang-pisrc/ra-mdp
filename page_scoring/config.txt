@@ -2,7 +2,7 @@
 host = localhost
 user = rockwell
 password = rockwell
-db = page_scoring
+db = rockwell
 
 [data-import]
 dataPath = /Volumes/Flyte/content-scoring/
