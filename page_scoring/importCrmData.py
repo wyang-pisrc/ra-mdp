@@ -21,7 +21,7 @@ cursor = mydb.cursor()
 
 csv_data = csv.reader(open(config['data-import']['datapath'] + 'crm_Lead_20221116_all.csv', 'r'))
 
-stmt = 'INSERT INTO `crm_data` (leadid, emailaddress1, firstname, lastname, jobtitle, companyname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+stmt = 'INSERT INTO `crm_data` (leadid, emailaddress1, firstname, lastname, jobtitle, customerid, customeridname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
 i=0;
 for row in csv_data:
@@ -39,7 +39,8 @@ for row in csv_data:
             firstname=row[93] or None
             lastname=row[105] or None
             jobtitle=row[104] or None
-            companyname=row[55] or None
+            customerid=row[65] or None
+            customeridname=row[66] or None
             ra_generalengagementscore=row[203] or None
             ra_leadstagename=row[213] or None
             ra_salesrejectionreasonname=row[251] or None
@@ -48,8 +49,7 @@ for row in csv_data:
             statuscodename=row[297] or None
             ra_salesacceptedname=row[243] or None
             address1_country=row[7] or None
-            #print(stmt % (leadid, emailaddress1, firstname, lastname, jobtitle, companyname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country));
-            cursor.execute(stmt, (leadid, emailaddress1, firstname, lastname, jobtitle, companyname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country));
+            cursor.execute(stmt, (leadid, emailaddress1, firstname, lastname, jobtitle, customerid, customeridname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country));
         except Exception as e:
             print("Import parse exception : %s" % e)
             print(row)

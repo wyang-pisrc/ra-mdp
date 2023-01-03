@@ -52,7 +52,7 @@ files=[
 
 for file in files:
     print("Working on %s" % file)
-    csv_data = csv.reader(open(file, 'r'))
+    csv_data = csv.reader(open(file, 'r'), delimiter=',', quotechar='"')
     next(csv_data)
     stmt = "INSERT INTO aem_data (DateTime, PageURL, EloquaContactId, mcvisid, GeoCountry) VALUES (%s, \"%s\", '%s', '%s', '%s')"
 
@@ -62,8 +62,8 @@ for file in files:
             DateTimeString=str(row[5])[0:19]
             PageURL=str(row[6] or None).lower()
             EloquaContactId=str(row[14] or None).upper()
-            mcvisid=str(row[16] or None)
-            GeoCountry=str(row[18] or None)
+            mcvisid=str(row[16]) or None
+            GeoCountry=str(row[18]) or None
             DateTime="".join(["STR_TO_DATE(\"",DateTimeString, "\",\"%Y-%m-%d %H:%i:%S\")"])
 
             executableStmt=stmt % (DateTime,PageURL,EloquaContactId,mcvisid,GeoCountry)

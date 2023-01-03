@@ -8,7 +8,8 @@
   `firstname` varchar(64) DEFAULT NULL,
   `lastname` varchar(128) DEFAULT NULL,
   `jobtitle` varchar(128) DEFAULT NULL,
-  `companyname` varchar(128) DEFAULT NULL,
+  `customerid` varchar(64) DEFAULT NULL,
+  `customeridname` varchar(128) DEFAULT NULL,
   `ra_generalengagementscore` varchar(12) DEFAULT NULL,
   `ra_leadstagename` varchar(32) DEFAULT NULL,
   `ra_salesrejectionreasonname` varchar(128) DEFAULT NULL,
@@ -235,18 +236,49 @@ delete from counts where eloqua is null;
 
 16.
 
----PDFs
-SELECT PageURL, total, eloqua, crmGood, crmBad, eloqua/total AS etRatio, crmGood/eloqua AS geRatio, crmGood/crmBad AS gbRatio, crmGood/(crmGood+crmBad) AS crmGoodRatio, SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad)) AS error, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood + crmBad))*(crmBad/(crmGood + crmBad))/(crmGood + crmBad))) as crmGoodRatioMuted FROM counts WHERE crmGood > 0 and crmBad > 0 AND total > 10 AND PageURL LIKE '%.pdf' ORDER BY crmGoodRatioMuted DESC
+DROP VIEW IF EXISTS summary_counts_view;
 
----ALL
-SELECT "PageURL", "Total", "Eloqua", "Good", "Bad", "Unknown", "leadPartition", "kYield", "kYieldError", "modifiedKYield"  UNION ALL
+CREATE VIEW summary_counts_view AS
+SELECT PageURL, total as Total, eloqua as Eloqua, crmGood, crmBad, (eloqua - crmGood - crmBad) as Unknown, eloqua/Total as LeadPartition, crmGood/(crmGood+crmBad) AS kYield, SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad)) as kYieldError, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad))) as kYieldModified FROM counts WHERE (crmGood + crmBad) > 10 and crmGood > 0 and crmBad > 0;
+
+SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Total", "Eloqua", "crmGood", "crmBad", "Unknown", "LeadPartition", "kYield", "kYieldError", "kYieldModified", "Subtotal", "Traffic"  UNION ALL
 (
-    SELECT PageURL, total as Total, eloqua as Eloqua, crmGood as Good, crmBad as Bad, (eloqua - crmGood - crmBad) as Unknown, eloqua/Total as leadPartition, crmGood/(crmGood+crmBad) AS kYield, SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad)) as error, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad))) as modifiedKYield FROM counts WHERE crmGood > 0 and crmBad > 0 ORDER BY modifiedKYield DESC
+    SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(ORDER BY y.Traffic DESC) AS goodLeadRank, row_number() OVER(ORDER BY y.LeadPartition DESC) AS leadRank, ROUND(y.Unknown * kYieldModified, 0) AS opportunities, y.* FROM (
+        SELECT *, 100*(crmGood+crmBad)/Subtotal as Traffic FROM (select PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
+    ) y ORDER BY kYieldModified DESC
 )
-INTO OUTFILE '/Users/ikim/rockwell-scores-all-4.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
+INTO OUTFILE '/Users/ikim/rockwell-scores-all.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
 
 
 select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total) from counts where crmGood > 0 and crmBad > 0;
----- 423056, 505944, 929000, 8385666, 27344747
+----|       423056 |      505944 |                929000 |     8385666 |   27344747 |
+
+select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic) from summary_counts_view where crmGood > 0 and crmBad > 0;
+----|       417830 |      500108 |                917938 |     8243158 |   26732686 |      99.9971 |
 
 
+17.
+CREATE TABLE `url_map` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `PageURL` varchar(256) DEFAULT NULL,
+  `count` int default 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `PageURL` (`PageURL`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+set autocommit=1;
+INSERT INTO url_map (PageURL, count)
+select  pageurl, count(pageurl) as c from aem_eloqua_crm group by pageurl order by c DESC;
+
+
+18.
+
+CREATE TABLE `aem_keywords` (
+  `mcvisid` varchar(64) NOT NULL,
+  `keywords` varchar(128) NOT NULL,
+  PRIMARY KEY (`mcvisid`, `keywords`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+importAEMKeywords.py
+
+select distinct k.keywords, l.EmailAddress, l.opportunity from aem_keywords k, aem_map m, lead_map l where m.mcvisid = k.mcvisid and m.EloquaContactId = l.EloquaContactId order by l.EmailAddress;
