@@ -135,7 +135,43 @@ def load_csv_batches(glob_pattern="./target_mcvisid/*.csv", num=2, keep="last"):
         print("current rows: ", df.shape[0])
     return df
 
-        
+def score_bar_plot(index, x, num_levels = 5, color_opts = ['lightskyblue', 'turquoise', 'orange', 'blue', 'red']):
+    num_levels = 5
+    color_opts = ['lightskyblue', 'turquoise', 'orange', 'blue', 'red']
+
+
+    xx = pd.concat([index, x, pd.cut(x, num_levels)], axis=1)
+    xx.columns = ["asset", "weight", "bins"]
+    xx["bins"] = xx["bins"].map(lambda x: f"[{str(x.left)}, {str(x.right)}]")
+    bin_dict = sorted(xx["bins"].unique().tolist())
+
+    colors = dict(zip(bin_dict, color_opts[0:num_levels]))
+    labels = dict(zip(bin_dict, range(1, len(bin_dict)+1)))
+
+
+    xx["color"] = xx["bins"].apply(lambda x: colors[x] if x in colors else "NA")
+    xx["auto_score"] = xx["bins"].apply(lambda x: labels[x] if x in colors else "NA")
+    xx = xx.reset_index()
+    plt.figure(figsize=(20,10))
+
+    for idx, item in xx.groupby("bins"):
+        if item.shape[0] ==0:
+            continue
+        plt.bar(x=item.index, height = item["weight"], color=item["color"], label=item["auto_score"].iloc[0])
+    #     break
+
+    for pair in bin_dict:
+        upper_line = eval(pair)[1]
+        plt.plot([0, xx.shape[0]],[upper_line, upper_line], )
+
+
+    plt.xlabel("Asset index rows")
+    plt.ylabel("Model Assign Weight")
+    plt.title("Asset auto standardized score")
+    plt.legend()
+    plt.show()
+    return xx
+
 iso_language = [
     ('aa', 'Afar'),
     ('ab', 'Abkhazian'),
