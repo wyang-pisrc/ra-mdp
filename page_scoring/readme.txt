@@ -293,5 +293,32 @@ CREATE TABLE `lead_score` (
   PRIMARY KEY (`EmailAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
-SELECT EmailAddress, count(*) as visitCount, min(aec.DateTime) as minTime, max(aec.DateTime) as maxTime from aem_eloqua_crm aec WHERE aec.emailAddress IS NOT NULL GROUP BY EmailAddress ORDER BY EmailAddress;
----- (1 minute)
+INSERT INTO lead_score
+SELECT
+    aec.EmailAddress, count(*) as viewCount, vv.visits as visitCount, min(aec.DateTime) as minTime, max(aec.DateTime) as maxTime, 0.0
+FROM aem_eloqua_crm aec,
+    (SELECT EmailAddress, count(*) as visits FROM (select distinct EmailAddress, DATE_FORMAT(DateTime, '%Y-%m-%d') as visits FROM aem_eloqua_crm aec where aec.EmailAddress IS NOT NULL) yy group by EmailAddress) vv
+WHERE
+    aec.emailAddress IS NOT NULL
+    AND aec.emailAddress =  vv.EmailAddress
+GROUP BY aec.EmailAddress
+ORDER BY aec.EmailAddress;
+
+---- (20 seconds)
+
+---- exp(sum(ln(value))) === PRODUCT (value)
+UPDATE lead_score l, (
+    SELECT EmailAddress, goodCount, badCount, SubTotal, exp(sum(ln(goodPart))) cumulativeGood, exp(sum(ln(badPart))) cumulativeBad FROM (
+        select aec.*, sv.goodCount, sv.badCount, sv.Subtotal, sv.goodPart, sv.badPart from aem_eloqua_crm aec, summary_counts_rank_view sv
+        where aec.PageURL = sv.PageURL
+    ) pp GROUP BY pp.EmailAddress, goodCount, badCount, SubTotal
+) v
+SET l.leadScore = ((v.cumulativeGood * (v.goodCount/v.Subtotal))/((v.cumulativeGood * (v.goodCount/v.Subtotal)) + (cumulativeBad * (v.badCount/v.Subtotal))))
+WHERE 
+    l.EmailAddress is NOT NULL
+    AND v.cumulativeGood > 0.0
+    AND v.cumulativeBad > 0.0
+    AND l.EmailAddress = v.EmailAddress;
+
+---- (50 seconds)
+
