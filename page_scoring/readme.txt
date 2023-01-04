@@ -236,12 +236,12 @@ SELECT PageURL, total as Total, eloqua as Eloqua, crmGood, crmBad, (eloqua - crm
 DROP VIEW IF EXISTS summary_counts_rank_view;
 
 CREATE VIEW summary_counts_rank_view AS
-SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(ORDER BY y.Traffic DESC) AS goodLeadRank, row_number() OVER(ORDER BY y.LeadPartition DESC) AS leadRank, ROUND(y.Unknown * kYieldModified, 0) AS opportunities, y.* FROM (
-    SELECT *, CAST((CAST((crmGood + crmBad) as decimal(65,30))/917938) as decimal(65,30)) as Traffic FROM (SELECT PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
+SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(ORDER BY y.Traffic DESC) AS goodLeadRank, row_number() OVER(ORDER BY y.LeadPartition DESC) AS leadRank, ROUND(y.Unknown * kYieldModified, 0) AS opportunities, y.*, CAST(y.kYieldModified as decimal(65,30))*CAST(y.Traffic as decimal(65,30))/(CAST(y.goodCount as decimal(65,30))/CAST(y.Subtotal as decimal(65,30))) as GoodPart, (1-CAST(y.kYieldModified as decimal(65,30)))*CAST(y.Traffic as decimal(65,30))/(CAST(y.badCount as decimal(65,30))/CAST(y.Subtotal as decimal(65,30))) as BadPart FROM (
+    SELECT *, CAST((CAST((crmGood + crmBad) as decimal(65,30))/917938) as decimal(65,30)) as Traffic FROM (SELECT PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood) from summary_counts_view) as goodCount, (SELECT sum(crmBad) from summary_counts_view) as badCount, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
 ) y ORDER BY kYieldModified DESC;
 
 ---- Export to CSV
-SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Total", "Eloqua", "crmGood", "crmBad", "Unknown", "LeadPartition", "kYield", "kYieldError", "kYieldModified", "Subtotal", "Traffic"  UNION ALL
+SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Total", "Eloqua", "crmGood", "crmBad", "Unknown", "LeadPartition", "kYield", "kYieldError", "kYieldModified", "goodCount", "badCount", "Subtotal", "Traffic", "GoodPart", "BadPart"  UNION ALL
 (
     SELECT * from summary_counts_rank_view
 )
@@ -253,8 +253,8 @@ INTO OUTFILE '/Users/ikim/rockwell-scores-all.csv' FIELDS ENCLOSED BY '"' TERMIN
 select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total) from counts where (crmGood + crmBad) > 10 and crmGood > -1 and crmBad > -1;
 ----|       417830 |      500108 |                917938 |     8243158 |   26732686 |
 
-select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic) from summary_counts_rank_view;
-----|       417830 |      500108 |                917938 |     8243158 |   26732686 | 0.999999999999999999999999999978 |
+select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic), sum(GoodPart), sum(BadPart) from summary_counts_rank_view;
+----|       417830 |      500108 |                917938 |     8243158 |   26732686 | 0.999999999999999999999999999978 | 0.985270325573349627839410765158 | 1.012306341561597344973203787902
 
 
 17.
