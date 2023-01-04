@@ -239,22 +239,29 @@ delete from counts where eloqua is null;
 DROP VIEW IF EXISTS summary_counts_view;
 
 CREATE VIEW summary_counts_view AS
-SELECT PageURL, total as Total, eloqua as Eloqua, crmGood, crmBad, (eloqua - crmGood - crmBad) as Unknown, eloqua/Total as LeadPartition, crmGood/(crmGood+crmBad) AS kYield, SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad)) as kYieldError, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad))) as kYieldModified FROM counts WHERE (crmGood + crmBad) > 10 and crmGood > 0 and crmBad > 0;
+SELECT PageURL, total as Total, eloqua as Eloqua, crmGood, crmBad, (eloqua - crmGood - crmBad) as Unknown, eloqua/Total as LeadPartition, crmGood/(crmGood+crmBad) AS kYield, SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad)) as kYieldError, crmGood/(crmGood+crmBad) * (1-SQRT((crmGood/(crmGood+crmBad))*(1-(crmGood/(crmGood+crmBad)))/(crmGood + crmBad))) as kYieldModified FROM counts WHERE (crmGood + crmBad) > 10 and crmGood > -1 and crmBad > -1;
+
+DROP VIEW IF EXISTS summary_counts_rank_view;
+
+CREATE VIEW summary_counts_rank_view AS
+SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(ORDER BY y.Traffic DESC) AS goodLeadRank, row_number() OVER(ORDER BY y.LeadPartition DESC) AS leadRank, ROUND(y.Unknown * kYieldModified, 0) AS opportunities, y.* FROM (
+    SELECT *, CAST((CAST((crmGood + crmBad) as decimal(65,30))/917938) as decimal(65,30)) as Traffic FROM (SELECT PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
+) y ORDER BY kYieldModified DESC;
 
 SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Total", "Eloqua", "crmGood", "crmBad", "Unknown", "LeadPartition", "kYield", "kYieldError", "kYieldModified", "Subtotal", "Traffic"  UNION ALL
 (
-    SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(ORDER BY y.Traffic DESC) AS goodLeadRank, row_number() OVER(ORDER BY y.LeadPartition DESC) AS leadRank, ROUND(y.Unknown * kYieldModified, 0) AS opportunities, y.* FROM (
-        SELECT *, 100*(crmGood+crmBad)/Subtotal as Traffic FROM (select PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
-    ) y ORDER BY kYieldModified DESC
+    SELECT * from summary_counts_rank_view
 )
 INTO OUTFILE '/Users/ikim/rockwell-scores-all.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
 
+---- 2840 records
 
-select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total) from counts where crmGood > 0 and crmBad > 0;
-----|       423056 |      505944 |                929000 |     8385666 |   27344747 |
 
-select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic) from summary_counts_view where crmGood > 0 and crmBad > 0;
-----|       417830 |      500108 |                917938 |     8243158 |   26732686 |      99.9971 |
+select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total) from counts where (crmGood + crmBad) > 10 and crmGood > -1 and crmBad > -1;
+----|       417830 |      500108 |                917938 |     8243158 |   26732686 |
+
+select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic) from summary_counts_rank_view;
+----|       417830 |      500108 |                917938 |     8243158 |   26732686 | 0.999999999999999999999999999978 |
 
 
 17.
