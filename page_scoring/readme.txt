@@ -48,7 +48,7 @@ CREATE TABLE `aem_data` (
 
 8. python importAEMData.py
 
-9.  table to hold adobe analytics data deduplicated by minute
+9. Table to hold adobe analytics data deduplicated by minute
 
 create table `aem_data_minute` (
   `datetime` datetime default null,
@@ -65,15 +65,14 @@ set autocommit=1;
 INSERT IGNORE INTO aem_data_minute
 SELECT DATE_FORMAT(DateTime, '%Y-%m-%d %H:%i'), REGEXP_REPLACE(PageURL, '#.*$', ''), EloquaContactId, mcvisid, GeoCountry FROM aem_data;
 
-29980263 records total
-7199661 records with EloquaContactId
-22780602 records without EloquaContactId
-(takes a while)
+---- 29980263 records total
+---- 7199661 records with EloquaContactId
+---- 22780602 records without EloquaContactId
+---- (takes a while)
 
 
-10. 
-Holds a mapping of analytics id with eloqua id
-----
+10. Holds a mapping of analytics id with eloqua id
+
 CREATE TABLE `aem_map` (
   `EloquaContactId` varchar(32) NOT NULL,
   `mcvisid` varchar(64) NOT NULL,
@@ -85,12 +84,10 @@ set autocommit=1;
 INSERT INTO aem_map (EloquaContactId, mcvisid)
 SELECT DISTINCT EloquaContactId, mcvisid FROM aem_data_minute WHERE EloquaContactId IS NOT NULL;
 
-162081 records
+---- 162081 records
 
-11.
-Holds a mapping of pages without country site differentiation
-with their analytics id, back-dated eloqua id, and back-dated lead id
-----
+11. Holds a mapping of pages without country site differentiation with their analytics id, back-dated eloqua id, and back-dated lead id
+
 CREATE TABLE `aem_eloqua_crm` (
   `DateTime` datetime DEFAULT NULL,
   `PageURL` varchar(255) NOT NULL,
@@ -126,12 +123,11 @@ ON a.mcvisid=e.mcvisid
 WHERE
     a.flatURL NOT REGEXP '(^/adfs/|^(http.*|file:.*)|https?:|.*\.gif$|.*\.js$|^/\%.*|change\-password)';
 
-15537075 records
-(takes 46 minutes)
+---- 15537075 records
+---- (takes 46 minutes)
 
-12.
-Holds a mapping of crm lead id with eloqua id
-----
+12.  Holds a mapping of crm lead id with eloqua id
+
 CREATE TABLE `lead_map` (
   `EloquaContactId` varchar(32) NOT NULL,
   `EmailAddress` varchar(128) NOT NULL,
@@ -144,7 +140,7 @@ set autocommit=1;
 INSERT INTO lead_map (EloquaContactId, EmailAddress)
 select distinct e.EloquaContactId, e.EmailAddress from eloqua_data e, crm_data c where e.EmailAddress = c.emailaddress1;
 
-144050 records
+---- 144050 records
 
 13.
 set autocommit=1; 
@@ -159,7 +155,7 @@ UPDATE lead_map SET opportunity = 1 WHERE EmailAddress IN (
         )
 );
 
-Changed: 36089
+---- Changed: 36089
 
 UPDATE lead_map SET opportunity = 0
 WHERE 
@@ -175,7 +171,7 @@ AND EmailAddress IN (
         )
 );
 
-Changed: 25467
+---- Changed: 25467
 
 UPDATE lead_map SET opportunity = -1
 WHERE
@@ -188,20 +184,18 @@ AND EmailAddress IN (
         AND c.statuscodename in ('Not Decision Maker', 'Not buying or influence location', 'No Interest', 'Insufficient information to contact', 'No buying intention', 'Unable to make contact (via phone,email)', 'Unable to make contact',  'No viable contact', 'Max Attempts', 'Competitor/Non RA distributor', 'Selling barrier to high', 'Unable to process', 'Credit hold or watch', 'Not Buying Location', 'No RA solution', 'Bad Contact Information')
 );
 
-Changed: 57856
+---- Changed: 57856
 
-13.
-Populate previously created aem_eloqua_crm empty leadid fields with applicable leadids from the lead_map
-----
+13.  Populate previously created aem_eloqua_crm empty leadid fields with applicable leadids from the lead_map
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.neutralLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = 0;
---- 306615 records
+---- 306615 records
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.badLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = -1;
---- 519422 records
+---- 519422 records
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.goodLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = 1;
---- 432412 records
+---- 432412 records
 
 
 14. 
@@ -226,15 +220,13 @@ ON a.PageURL = lneutral.PageURL
 LEFT JOIN ( select PageURL, count(PageURL) c from aem_eloqua_crm WHERE badLead IS TRUE group by PageURL) lbad
 ON a.PageURL = lbad.PageURL;
 
-462996 records
-4 minutes
+---- 462996 records
+---- (4 minutes)
 
-15.
-delete from counts where eloqua is null;
-418642 records
+15. DELETE FROM counts WHERE eloqua IS NULL;
+---- 418642 records
 
-
-16.
+16. Create summary views of row math and rank.
 
 DROP VIEW IF EXISTS summary_counts_view;
 
@@ -248,6 +240,7 @@ SELECT row_number() OVER(ORDER BY y.Total DESC) AS pageRank, row_number() OVER(O
     SELECT *, CAST((CAST((crmGood + crmBad) as decimal(65,30))/917938) as decimal(65,30)) as Traffic FROM (SELECT PageURL, Total, Eloqua, crmGood, crmBad, Unknown, LeadPartition, kYield, kYieldError, kYieldModified, (SELECT sum(crmGood+crmBad) from summary_counts_view) as Subtotal from summary_counts_view order by kYieldModified ASC) x
 ) y ORDER BY kYieldModified DESC;
 
+---- Export to CSV
 SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Total", "Eloqua", "crmGood", "crmBad", "Unknown", "LeadPartition", "kYield", "kYieldError", "kYieldModified", "Subtotal", "Traffic"  UNION ALL
 (
     SELECT * from summary_counts_rank_view
@@ -275,17 +268,30 @@ CREATE TABLE `url_map` (
 
 set autocommit=1;
 INSERT INTO url_map (PageURL, count)
-select  pageurl, count(pageurl) as c from aem_eloqua_crm group by pageurl order by c DESC;
+SELECT pageurl, count(pageurl) as c FROM aem_eloqua_crm GROUP BY pageurl ORDER BY c DESC;
 
 
 18.
-
 CREATE TABLE `aem_keywords` (
   `mcvisid` varchar(64) NOT NULL,
   `keywords` varchar(128) NOT NULL,
   PRIMARY KEY (`mcvisid`, `keywords`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-importAEMKeywords.py
+python importAEMKeywords.py
 
-select distinct k.keywords, l.EmailAddress, l.opportunity from aem_keywords k, aem_map m, lead_map l where m.mcvisid = k.mcvisid and m.EloquaContactId = l.EloquaContactId order by l.EmailAddress;
+SELECT DISTINCT k.keywords, l.EmailAddress, l.opportunity from aem_keywords k, aem_map m, lead_map l where m.mcvisid = k.mcvisid and m.EloquaContactId = l.EloquaContactId order by l.EmailAddress;
+
+19.
+CREATE TABLE `lead_score` (
+  `EmailAddress` varchar(128) NOT NULL,
+  `pageViews` int DEFAULT '1',
+  `sessionCount` int DEFAULT '1',
+  `firstVisit` datetime NOT NULL,
+  `lastVisit` datetime NOT NULL,
+  `leadScore` decimal(65,30) DEFAULT NULL,
+  PRIMARY KEY (`EmailAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+SELECT EmailAddress, count(*) as visitCount, min(aec.DateTime) as minTime, max(aec.DateTime) as maxTime from aem_eloqua_crm aec WHERE aec.emailAddress IS NOT NULL GROUP BY EmailAddress ORDER BY EmailAddress;
+---- (1 minute)
