@@ -88,20 +88,22 @@ SELECT DISTINCT EloquaContactId, mcvisid FROM aem_data_minute WHERE EloquaContac
 
 11. Holds a mapping of pages without country site differentiation with their analytics id, back-dated eloqua id, and back-dated lead id
 
-CREATE TABLE `aem_eloqua_crm` (
+aem_eloqua_crm | CREATE TABLE `aem_eloqua_crm` (
   `DateTime` datetime DEFAULT NULL,
   `PageURL` varchar(255) NOT NULL,
   `EloquaContactId` varchar(32) DEFAULT NULL,
   `EmailAddress` varchar(128) DEFAULT NULL,
-  `goodLead` boolean DEFAULT 0,
-  `neutralLead` boolean DEFAULT 0,
-  `badLead` boolean DEFAULT 0,
+  `goodLead` tinyint(1) DEFAULT '0',
+  `neutralLead` tinyint(1) DEFAULT '0',
+  `badLead` tinyint(1) DEFAULT '0',
   `mcvisid` varchar(64) NOT NULL,
   `GeoCountry` varchar(16) NOT NULL,
   KEY `page_idx` (`PageURL`),
   KEY `eloqua_idx` (`EloquaContactId`),
-  KEY `mcvisid_idx` (`mcvisid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `mcvisid_idx` (`mcvisid`),
+  KEY `aec_email_idx` (`EmailAddress`),
+  KEY `aec_url_idx` (`PageURL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 set autocommit=1;
 INSERT INTO aem_eloqua_crm (DateTime, PageURL, EloquaContactId, mcvisid, GeoCountry)
@@ -309,7 +311,7 @@ ORDER BY aec.EmailAddress;
 ---- exp(sum(ln(value))) === PRODUCT (value)
 UPDATE lead_score l, (
     SELECT EmailAddress, goodCount, badCount, SubTotal, exp(sum(ln(goodPart))) cumulativeGood, exp(sum(ln(badPart))) cumulativeBad FROM (
-        select aec.*, sv.goodCount, sv.badCount, sv.Subtotal, sv.goodPart, sv.badPart from aem_eloqua_crm aec, summary_counts_rank_view sv
+        select distinct aec.PageURL, aec.EmailAddress, aec.goodLead, aec.neutralLead, aec.badLead, sv.goodCount, sv.badCount, sv.Subtotal, sv.goodPart, sv.badPart from aem_eloqua_crm aec, summary_counts_rank_view sv
         where aec.PageURL = sv.PageURL
     ) pp GROUP BY pp.EmailAddress, goodCount, badCount, SubTotal
 ) v
@@ -322,3 +324,65 @@ WHERE
 
 ---- (50 seconds)
 
+
+
+20.
+---- To check relevant page views with scores for a user:
+SELECT pp.EmailAddress, goodCount, badCount, SubTotal, exp(sum(ln(goodPart))) cumulativeGood, exp(sum(ln(badPart))) cumulativeBad, l.opportunity FROM (
+    select distinct aec.PageURL, aec.EmailAddress, aec.goodLead, aec.neutralLead, aec.badLead, sv.goodCount, sv.badCount, sv.Subtotal, sv.goodPart, sv.badPart from aem_eloqua_crm aec, summary_counts_rank_view sv
+    WHERE aec.PageURL = sv.PageURL
+    AND aec.EmailAddress = 'zwang@quantumscape.com'
+) pp, lead_map l 
+WHERE l.EmailAddress = pp.EmailAddress
+GROUP BY pp.EmailAddress, goodCount, badCount, SubTotal, l.opportunity;
+
+---- To get a ranked list of available lead opportunities (5 minutes)
+SELECT "EmailAddress", "pageViews", "sessionCount", "firstVisit", "lastVisit", "leadScore", "firstname", "lastname", "customeridname", "keywordTuple", "urlTuple" UNION ALL
+(
+    SELECT aa.*, kw.keywordTuple, ph.urlTuple FROM
+    (SELECT DISTINCT ls.*,c.firstname, c.lastname, c.customeridname
+    FROM lead_score ls, lead_map lm, crm_data c
+    WHERE
+        ls.EmailAddress = lm.EmailAddress
+        AND lm.opportunity = 0
+        AND c.emailaddress1 = ls.EmailAddress
+        AND c.statuscodename IN ('Admin Only: Abandoned by Sales', 'New')
+        AND ls.leadScore > 0.9
+        AND ls.lastVisit between '2022-08-01' and now()
+    ORDER BY ls.leadScore DESC) aa
+    LEFT JOIN
+        (SELECT GROUP_CONCAT(iak.keywords SEPARATOR ', ') keywordTuple, ilm.EmailAddress from aem_keywords iak, aem_map iam, lead_map ilm where iak.mcvisid = iam.mcvisid and ilm.EloquaContactId = iam.EloquaContactId group by EmailAddress order by EmailAddress) kw
+    ON
+        kw.EmailAddress = aa.EmailAddress
+    LEFT JOIN
+        (SELECT emailAddress, GROUP_CONCAT(kwt.pageurl SEPARATOR ', ') urlTuple FROM
+            (select emailAddress, pageurl, count(*) c from aem_eloqua_crm group by emailAddress, pageurl order by c desc) kwt
+        GROUP BY  emailAddress) ph
+    ON ph.emailAddress = aa.EmailAddress
+)
+INTO OUTFILE '/Users/ikim/rockwell-opportunities.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' LINES TERMINATED BY '\n';
+
+statuscodename
++------------------------------------------+
+| Does not meet campaign criteria          |
+| Unable to make contact (via phone,email) |
+| No Interest                              |
+| Max Attempts                             |
+| Not buying or influence location         |
+| Admin Only: Abandoned by Sales           |
+| Duplicate Lead                           |
+| No buying intention                      |
+| Not Buying Location                      |
+| New                                      |
+| Insufficient information to contact      |
+| Selling barrier to high                  |
+| No viable contact                        |
+| Not Decision Maker                       |
+| Unable to make contact                   |
+| Bad Contact Information                  |
+| No RA solution                           |
+| Competitor/Non RA distributor            |
+| Credit hold or watch                     |
+| Unable to Process                        |
+| NULL                                     |
++------------------------------------------+
