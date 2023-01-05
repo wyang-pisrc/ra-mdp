@@ -21,7 +21,7 @@ mydb = pymysql.connect(host=config['database']['host'],
 
 cursor = mydb.cursor()
 
-csv_data = csv.reader(open(config['data-import']['datapath'] + 'elq_all_bridge-only.csv', 'r'))
+csv_data = csv.reader(open(config['data-import']['datapath'] + 'elq_all_bridge-only_20230105.csv', 'r'))
 
 next(csv_data)
 

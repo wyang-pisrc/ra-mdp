@@ -24,7 +24,8 @@
 
 GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
 
-4. python importCrmData.py
+4. python importCrmData.py (fast)
+---- 255819 records
 
 5. CREATE TABLE `eloqua_data` (
   `EloquaContactId` varchar(32) NOT NULL,
@@ -33,12 +34,13 @@ GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
   KEY `email_idx` (`EmailAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
-6. python importEloquaData.py
+6. python importEloquaData.py (~30 min)
+---- 7859709 records
 
 7. Table holds raw Adobe Analytics data
 CREATE TABLE `aem_data` (
   `DateTime` datetime DEFAULT NULL,
-  `PageURL` varchar(256) NOT NULL,
+  `PageURL` varchar(400) NOT NULL,
   `EloquaContactId` varchar(32) DEFAULT NULL,
   `mcvisid` varchar(64) NOT NULL,
   `GeoCountry` varchar(16) NOT NULL,
@@ -46,7 +48,7 @@ CREATE TABLE `aem_data` (
   KEY `eloqua_idx` (`EloquaContactId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-8. python importAEMData.py
+8. python importAEMData.py (20220401-20221231 150 minutes)
 
 9. Table to hold adobe analytics data deduplicated by minute
 
@@ -65,10 +67,9 @@ set autocommit=1;
 INSERT IGNORE INTO aem_data_minute
 SELECT DATE_FORMAT(DateTime, '%Y-%m-%d %H:%i'), REGEXP_REPLACE(PageURL, '#.*$', ''), EloquaContactId, mcvisid, GeoCountry FROM aem_data;
 
----- 29980263 records total
----- 7199661 records with EloquaContactId
----- 22780602 records without EloquaContactId
----- (takes a while)
+---- 34443466 records total
+---- 8264299 records with EloquaContactId
+---- (51 min)
 
 
 10. Holds a mapping of analytics id with eloqua id
@@ -84,11 +85,12 @@ set autocommit=1;
 INSERT INTO aem_map (EloquaContactId, mcvisid)
 SELECT DISTINCT EloquaContactId, mcvisid FROM aem_data_minute WHERE EloquaContactId IS NOT NULL;
 
----- 162081 records
+---- 172904 records
+---- (31 sec)
 
 11. Holds a mapping of pages without country site differentiation with their analytics id, back-dated eloqua id, and back-dated lead id
 
-aem_eloqua_crm | CREATE TABLE `aem_eloqua_crm` (
+CREATE TABLE `aem_eloqua_crm` (
   `DateTime` datetime DEFAULT NULL,
   `PageURL` varchar(255) NOT NULL,
   `EloquaContactId` varchar(32) DEFAULT NULL,
@@ -125,8 +127,8 @@ ON a.mcvisid=e.mcvisid
 WHERE
     a.flatURL NOT REGEXP '(^/adfs/|^(http.*|file:.*)|https?:|.*\.gif$|.*\.js$|^/\%.*|change\-password)';
 
----- 15537075 records
----- (takes 46 minutes)
+---- 33891519 records
+---- (takes 66 minutes)
 
 12.  Holds a mapping of crm lead id with eloqua id
 
@@ -142,7 +144,7 @@ set autocommit=1;
 INSERT INTO lead_map (EloquaContactId, EmailAddress)
 select distinct e.EloquaContactId, e.EmailAddress from eloqua_data e, crm_data c where e.EmailAddress = c.emailaddress1;
 
----- 144050 records
+---- 143987 records
 
 13.
 set autocommit=1; 
@@ -157,7 +159,7 @@ UPDATE lead_map SET opportunity = 1 WHERE EmailAddress IN (
         )
 );
 
----- Changed: 36089
+---- Changed: 36558
 
 UPDATE lead_map SET opportunity = 0
 WHERE 
@@ -173,7 +175,7 @@ AND EmailAddress IN (
         )
 );
 
----- Changed: 25467
+---- Changed: 26744
 
 UPDATE lead_map SET opportunity = -1
 WHERE
@@ -186,18 +188,18 @@ AND EmailAddress IN (
         AND c.statuscodename in ('Not Decision Maker', 'Not buying or influence location', 'No Interest', 'Insufficient information to contact', 'No buying intention', 'Unable to make contact (via phone,email)', 'Unable to make contact',  'No viable contact', 'Max Attempts', 'Competitor/Non RA distributor', 'Selling barrier to high', 'Unable to process', 'Credit hold or watch', 'Not Buying Location', 'No RA solution', 'Bad Contact Information')
 );
 
----- Changed: 57856
+---- Changed: 59078
 
 13.  Populate previously created aem_eloqua_crm empty leadid fields with applicable leadids from the lead_map
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.neutralLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = 0;
----- 306615 records
+---- 356561 records
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.badLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = -1;
----- 519422 records
+---- 590800 records
 
 UPDATE aem_eloqua_crm a, lead_map l SET a.goodLead = TRUE, a.EmailAddress = l.EmailAddress WHERE a.EloquaContactId = l.EloquaContactId and l.opportunity = 1;
----- 432412 records
+---- 508529 records
 
 
 14. 
@@ -222,11 +224,11 @@ ON a.PageURL = lneutral.PageURL
 LEFT JOIN ( select PageURL, count(PageURL) c from aem_eloqua_crm WHERE badLead IS TRUE group by PageURL) lbad
 ON a.PageURL = lbad.PageURL;
 
----- 462996 records
----- (4 minutes)
+---- 465053 records
+---- (7 minutes)
 
 15. DELETE FROM counts WHERE eloqua IS NULL;
----- 418642 records
+---- 416941 records
 
 16. Create summary views of row math and rank.
 
@@ -249,14 +251,14 @@ SELECT "pageRank", "goodLeadRank", "leadRank", "Opportunities", "PageURL", "Tota
 )
 INTO OUTFILE '/Users/ikim/rockwell-scores-all.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY '"' LINES TERMINATED BY '\n';
 
----- 2840 records
+---- 3204 records
 
 
 select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total) from counts where (crmGood + crmBad) > 10 and crmGood > -1 and crmBad > -1;
-----|       417830 |      500108 |                917938 |     8243158 |   26732686 |
+----|       491518 |      569322 |               1060840 |     9515941 |   30894764 |
 
 select sum(crmGood), sum(crmBad), sum(crmGood + crmBad), sum(Eloqua), sum(Total), sum(Traffic), sum(GoodPart), sum(BadPart) from summary_counts_rank_view;
-----|       417830 |      500108 |                917938 |     8243158 |   26732686 | 0.999999999999999999999999999978 | 0.985270325573349627839410765158 | 1.012306341561597344973203787902
+----|       491518 |      569322 |               1060840 |     9515941 |   30894764 | 1.155677180811775958724881201114 | 1.138905592865750376240917538265 | 1.170156750131167449395104469560 |
 
 
 17.
@@ -266,7 +268,7 @@ CREATE TABLE `url_map` (
   `count` int default 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `PageURL` (`PageURL`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 set autocommit=1;
 INSERT INTO url_map (PageURL, count)
@@ -293,7 +295,7 @@ CREATE TABLE `lead_score` (
   `lastVisit` datetime NOT NULL,
   `leadScore` decimal(65,30) DEFAULT NULL,
   PRIMARY KEY (`EmailAddress`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO lead_score
 SELECT
@@ -322,9 +324,7 @@ WHERE
     AND v.cumulativeBad > 0.0
     AND l.EmailAddress = v.EmailAddress;
 
----- (50 seconds)
-
-
+---- (4 min)
 
 20.
 ---- To check relevant page views with scores for a user:
@@ -346,7 +346,7 @@ SELECT "EmailAddress", "pageViews", "sessionCount", "firstVisit", "lastVisit", "
         ls.EmailAddress = lm.EmailAddress
         AND lm.opportunity = 0
         AND c.emailaddress1 = ls.EmailAddress
-        AND c.statuscodename IN ('Admin Only: Abandoned by Sales', 'New')
+        AND c.statuscodename IN ('Admin Only: Abandoned by Sales', 'New', 'Does not meet campaign criteria')
         AND ls.leadScore > 0.9
         AND ls.lastVisit between '2022-08-01' and now()
     ORDER BY ls.leadScore DESC) aa
@@ -362,27 +362,3 @@ SELECT "EmailAddress", "pageViews", "sessionCount", "firstVisit", "lastVisit", "
 )
 INTO OUTFILE '/Users/ikim/rockwell-opportunities.csv' FIELDS ENCLOSED BY '"' TERMINATED BY ',' LINES TERMINATED BY '\n';
 
-statuscodename
-+------------------------------------------+
-| Does not meet campaign criteria          |
-| Unable to make contact (via phone,email) |
-| No Interest                              |
-| Max Attempts                             |
-| Not buying or influence location         |
-| Admin Only: Abandoned by Sales           |
-| Duplicate Lead                           |
-| No buying intention                      |
-| Not Buying Location                      |
-| New                                      |
-| Insufficient information to contact      |
-| Selling barrier to high                  |
-| No viable contact                        |
-| Not Decision Maker                       |
-| Unable to make contact                   |
-| Bad Contact Information                  |
-| No RA solution                           |
-| Competitor/Non RA distributor            |
-| Credit hold or watch                     |
-| Unable to Process                        |
-| NULL                                     |
-+------------------------------------------+

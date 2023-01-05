@@ -31,12 +31,8 @@ mydb = pymysql.connect(host=config['database']['host'],
 cursor = mydb.cursor()
 
 files=[
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221001-20221015.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221015-20221031.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220401-20220415.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220415-20220430.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220501-20220515.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220515-20220531.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220601-20220615.csv",
@@ -47,6 +43,12 @@ files=[
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220815-20220831.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220901-20220915.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220915-20220930.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221001-20221015.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221015-20221031.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221201-20221215.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221215-20221231.csv"
 ]
 
 

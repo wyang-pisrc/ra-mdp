@@ -19,7 +19,7 @@ mydb = pymysql.connect(host=config['database']['host'],
 
 cursor = mydb.cursor()
 
-csv_data = csv.reader(open(config['data-import']['datapath'] + 'crm_Lead_20221116_all.csv', 'r'))
+csv_data = csv.reader(open(config['data-import']['datapath'] + 'crm_Lead_all_20230105.csv', 'r'))
 
 stmt = 'INSERT INTO `crm_data` (leadid, emailaddress1, firstname, lastname, jobtitle, customerid, customeridname, ra_generalengagementscore, ra_leadstagename, ra_salesrejectionreasonname, ra_telerejectionreasonname, statecodename, statuscodename, ra_salesacceptedname, address1_country) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
