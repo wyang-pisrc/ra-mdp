@@ -4,6 +4,7 @@ import glob
 import re
 import socket, struct
 import configparser
+from urllib.parse import unquote
 from dateutil.parser import parse
 from datetime import datetime
 
@@ -53,21 +54,25 @@ files=[
 for file in files:
     print("Working on %s" % file)
     csv_data = csv.reader(open(file, 'r'), delimiter=',', quotechar='"')
+
+
     next(csv_data)
-    stmt = "INSERT INTO aem_data (DateTime, PageURL, EloquaContactId, mcvisid, GeoCountry) VALUES (%s, \"%s\", '%s', '%s', '%s')"
+    stmt = "INSERT IGNORE INTO aem_keywords (mcvisid, keywords) VALUES (%s, %s)"
 
     i=0;
     for row in csv_data:
         try:
-            DateTimeString=str(row[5])[0:19]
-            PageURL=str(row[6] or None).lower()
-            EloquaContactId=str(row[14] or None).upper()
+            keywordsRaw=str(row[7]) or None
             mcvisid=str(row[16]) or None
-            GeoCountry=str(row[18]) or None
-            DateTime="".join(["STR_TO_DATE(\"",DateTimeString, "\",\"%Y-%m-%d %H:%i:%S\")"])
-
-            executableStmt=stmt % (DateTime,PageURL,EloquaContactId,mcvisid,GeoCountry)
-            cursor.execute(executableStmt)
+            keywords=None
+            if keywordsRaw is not None:
+                for frag in keywordsRaw.split(";"):
+                    if frag[0:8] == "keyword=":
+                        keywords=unquote(unquote(frag[8:])).lower().strip()
+                        if keywords == '':
+                            keywords=None
+            if keywords is not None:
+                cursor.execute(stmt,(mcvisid, keywords))
         except Exception as e:
             print("Import parse exception : %s" % e)
             print(row)
@@ -75,7 +80,5 @@ for file in files:
         i+=1
         if (i%100 == 0):
             mydb.commit()
-    mydb.commit()
-    cursor.execute("UPDATE aem_data set EloquaContactId = NULL WHERE EloquaContactId = 'NONE'")
     mydb.commit()
 mydb.close()
