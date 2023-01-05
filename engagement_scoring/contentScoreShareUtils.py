@@ -10,11 +10,10 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sqlalchemy import create_engine
 import sqlalchemy
-import pymysql
 from urllib.parse import quote
 from sqlalchemy.types import *
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(suppress=True)
 
@@ -23,11 +22,36 @@ from sklearn import svm
 from sklearn.model_selection import cross_validate
 import os
 from glob import glob
-from tqdm import tqdm
-tqdm.pandas()
+# from tqdm import tqdm
+# tqdm.pandas()
 
 import warnings
 warnings.filterwarnings('ignore') 
+
+
+def mcvisid_label_assign(_lead, email_mcvisid):
+    crm_lead, drop_rows = email_cleanup(_lead, "emailaddress1")
+
+    statecodename_positive_rules = {"Qualified": 1}
+    statuscodename_positive_rules = {"Already Active Opportunity": 1, "Assigned to Distribution":1}
+    crm_lead["statecode_signal"] = crm_lead["statecodename"].map(statecodename_positive_rules).fillna(0)
+    crm_lead["statuscode_signal"] = crm_lead["statuscodename"].map(statuscodename_positive_rules).fillna(0)
+
+    def label_assign_rules(x):
+        target_cols = x[["statuscode_signal", "statecode_signal"]]
+        is_positive = target_cols.sum().sum()>0 # one of them is positive
+        return is_positive
+
+    ## signal aggregation as label
+    email_updated_label = crm_lead.groupby("emailaddress1").apply(lambda x: label_assign_rules(x)) 
+    email_updated_label = email_updated_label.reset_index()
+    email_updated_label.columns = ["EmailAddress", "label"]
+
+    mcvisid_labels = email_mcvisid.merge(email_updated_label, on="EmailAddress", how="left")
+    mcvisid_labels["label"].fillna(False, inplace=True)
+    # positive_mcvisid = mcvisid_labels[mcvisid_labels["label"] == True]["mcvisid"]
+    updated_labels = mcvisid_labels[["mcvisid","label"]].drop_duplicates()
+    return updated_labels
 
 
 def get_summary(table, field):
@@ -43,6 +67,30 @@ def email_cleanup(table, key="emailaddress1", drop_pattern="rockwell|pisrc|bount
     drop_rows = table[(table[key].str.contains(drop_pattern))] # remove rockwell related email
     table = table[(~table[key].str.contains(drop_pattern))] # remove rockwell related email
     return table, drop_rows
+
+
+def url_clean(x):
+    x = re.sub(',|;', "", x) # clean special symbol
+    x = re.sub("(#).*", "", x)  # clean tailing start with
+    # x = re.sub("details.[\w-]*","details.{ID}", x) # grouping product details
+    x = re.sub("com.cn", "com", x) # replace china area website URL
+    # x = re.sub("%20", " ", x) # keep URL encoding
+    
+    # grouping different language
+    x = re.sub("/$|(\.html)$|/[a-z]{2}$", "", x, flags=re.I)  # remove html, extra /
+    x = re.sub("/(global|go)/", "/", x, flags=re.I) 
+    x = re.sub(".com/[a-z]{2,3}/", ".com/", x, flags=re.I)  
+    # x = re.sub("/[a-z]{2}[-_][a-z]{2,3}$", "", x, flags=re.I)  # grouping homepage with different country code
+    x = re.sub("/[a-z]{2}[-_][a-z]{2}[-_][a-z]{2}$", "", x, flags=re.I)  # grouping search page with different country code
+    x = re.sub("/[a-z]{2}[-_][a-z]{2,3}/|/[a-z]{2}/", "/", x, flags=re.I)  # grouping any children pages with different country code
+    
+    return x
+
+def url_filter(url_maps):
+    url_maps[(url_maps["PageURL"].str.startswith("https://www.rockwellautomation"))
+         & (~url_maps["PageURL"].str.contains("\.gif$|\.js$|file://|\/adfs\/|change\-password"))
+        ]
+    return url_maps
 
 
 def identify_pos(user_journey, label_type = 2):

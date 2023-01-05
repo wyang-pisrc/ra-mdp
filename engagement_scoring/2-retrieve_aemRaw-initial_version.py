@@ -3,6 +3,8 @@
 # import pandas as pd
 import sqlalchemy
 import csv
+import getpass
+
 
   
 def get_aemRaw_query(start_month, end_month, start_day, end_day):
@@ -75,14 +77,15 @@ def get_aemRaw_query(start_month, end_month, start_day, end_day):
     ,[BingeScoredAssetPath]
     ,[BingeScoredAssetScore]
     FROM [Staging].[aem].[RawTraffic]
-    WHERE (VisitStartDateTime > '2022-{start_month}-{start_day}') AND (VisitStartDateTime < '2022-{end_month}-{end_day}') """
+    WHERE (VisitStartDateTime >= '2022-{start_month}-{start_day}') AND (VisitStartDateTime < '2022-{end_month}-{end_day}') """
     return s
 
 
 server = "sqlsvr-0092-mdp-02.85f8a2f57eaf.database.windows.net"
 database = "Staging"
 username = "pisrc-inkoo"
-password = input("Enter database password: ")
+# password = input("Enter database password: ")
+password = getpass.getpass('Enter database password: ')
 driver = "ODBC Driver 17 for SQL Server"
 
 engine = sqlalchemy.create_engine(
@@ -91,25 +94,40 @@ engine = sqlalchemy.create_engine(
 
 session = engine.connect()
 
-
-BINGE_START_MONTH = 4
-months = [str(month).zfill(2) for month in range(BINGE_START_MONTH, 13)]
+BINGE_START_MONTH = 12
+# BINGE_START_MONTH = 6
+months = [str(month).zfill(2) for month in range(BINGE_START_MONTH, 14)]
 month_pair = list(zip(months, months[1:]))
-days = [0, 15, 31]
+days = ["01", "15", "31"]
 day_pair = list(zip(days, days[1:]))
 arraysize = 100000
-month_break = False
+month_break = True
+month_max_days = {"04":"30", "06":"30","09":"30","11":"30"}
 
 for pair in month_pair:
-    start_month = pair[0]
-    end_month = pair[1]
-    
+    _start_month = pair[0]
+    _end_month = pair[1]
+    span = 0
     for pair in day_pair:
+        span +=1
+        if span == 1:
+            start_month, end_month = _start_month, _start_month
+        if span == 2:
+            start_month, end_month = _start_month, _start_month
+        if span == 3:
+            start_month, end_month = _end_month, _end_month
+        if span == 4:
+            start_month, end_month = _end_month, _end_month
+        
         start_day = pair[0]
         end_day = pair[1]
+        if (end_month in month_max_days.keys()) & (end_day == "31"):
+            end_day = "30"
+            
         print(f"Range month: 2022{start_month}{start_day}-2022{end_month}{end_day}")
         print("    Loading... 5mins~10mins")
-        query_string = get_aemRaw_query(start_month, end_month)
+        
+        query_string = get_aemRaw_query(start_month, end_month, start_day, end_day)
         cursor = session.execute(query_string)
 
         print("    Start saving...")
@@ -120,7 +138,8 @@ for pair in month_pair:
             # out.writerows(cursor.fetchall()) # high RAM consume
             
             while True:
-                print(        f"{idx+1}: row {idx*arraysize} - row {(idx+1)*arraysize}")
+                idx +=1 
+                print(f"        {idx}: row {idx*arraysize} - row {(idx+1)*arraysize}")
                 results = cursor.fetchmany(arraysize)
                 if not results:
                     print("End for this month")
@@ -129,5 +148,5 @@ for pair in month_pair:
 
     if month_break:
         isContinue = input("Enter Y to continue: ")
-        if not (isContinue.lower() == "y" | isContinue.lower() == "yes"):
+        if not ((isContinue.lower() == "y") | (isContinue.lower() == "yes")):
             break;
