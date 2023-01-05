@@ -3,13 +3,11 @@ import pandas as pd
 from contentScoreShareUtils import email_cleanup
 
 class Scoring_DataLoader:
-    def __init__(self, engine, preload=False):
+    def __init__(self, engine, preload=False, data_export_folder="./data/"):
         self.today = str(date.today()).replace("-","")
         self.engine = engine
         self.preload = preload
-        
-        self.lead_filename = f"crm_Lead_all_{self.today}.csv.gz"
-        self.elq_filename = f"elq_all_bridge-only_{self.today}.csv.gz"
+        self.data_export_folder = data_export_folder
         
     def loading(self, filename, query):
         if self.preload is True:
@@ -18,7 +16,7 @@ class Scoring_DataLoader:
         else: 
             print(f"Updating table into {filename}")
             df = pd.read_sql(query, self.engine)
-            df.to_csv(filename, index=None, compression="gzip")
+            df.to_csv(self.data_export_folder + filename, index=None, compression="gzip")
         return df
             
     def load_email_mcvisid(self):
@@ -42,7 +40,7 @@ class Scoring_DataLoader:
         elq_filename = f"elq_all_bridge-only_{self.today}.csv.gz"
         print(f"Updating table into {elq_filename}")
         df = pd.read_sql(self.get_elq_bridge_only_query(), self.engine)
-        df.to_csv(elq_filename, index=None, compression="gzip")
+        df.to_csv(self.data_export_folder + elq_filename, index=None, compression="gzip")
         del df
         
 

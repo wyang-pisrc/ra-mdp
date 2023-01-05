@@ -102,9 +102,10 @@ if __name__ == '__main__':
     parse_version = 'p1'
     summary_version = 'v1'
     preload = False
+    data_export_folder = "./data/"
     
     ## data store 
-    dataLoader = Scoring_DataLoader(engine, preload)
+    dataLoader = Scoring_DataLoader(engine, preload, data_export_folder)
     email_mcvisid, valid_mcvisid, drop_mcvisid = dataLoader.load_email_mcvisid()
     _lead = dataLoader.load_crm_lead()
     dataLoader.save_elq_bridge()
@@ -122,7 +123,7 @@ if __name__ == '__main__':
         print("    Start processing...")
         idx = 0
         filename = f"aemRaw_keyColumns_2022{start_month}{start_day}-2022{end_month}{end_day}_{parse_version}{summary_version}.csv" + ".gz"
-        os.remove(filename)
+        os.remove(data_export_folder+filename)
         columns = [col for col in cursor.keys()]
         while True:
             idx +=1 
@@ -135,7 +136,7 @@ if __name__ == '__main__':
             print(f"        {idx}: row {(idx-1)*batch_size} - row {idx * batch_size}, finish loading/processing from SQL Server, keep {aem_raw.shape[0]} rows")
             hasHeader = (idx == 1)
             aem_raw.drop(columns=["DateTime_UTC"], inplace=True)
-            aem_raw.to_csv(filename, mode='a', header=hasHeader, index=None, compression="gzip") # pd.read_csv('random_data.csv.gz', compression='gzip')
+            aem_raw.to_csv(data_export_folder+filename, mode='a', header=hasHeader, index=None, compression="gzip") # pd.read_csv('random_data.csv.gz', compression='gzip')
             logs.append([filename, idx] + log)
 
         
@@ -164,6 +165,6 @@ if __name__ == '__main__':
                 "After ETL keep unique mcvisid",
                 "After ETL keep unique pageURL",])
 
-    logs_df.to_excel(f"AEM_table_ETL_logs_{parse_version}_{summary_version}.xlsx")
+    logs_df.to_excel(data_export_folder+f"AEM_table_ETL_logs_{parse_version}_{summary_version}.xlsx")
 
 
