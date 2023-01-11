@@ -29,13 +29,10 @@ mydb = pymysql.connect(host=config['database']['host'],
 
 cursor = mydb.cursor()
 
+# When running a monthly "delta" import, add the new month files and comment out previously imported files
 files=[
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221001-20221015.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221015-20221031.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220401-20220415.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220415-20220430.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220501-20220515.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220515-20220531.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220601-20220615.csv",
@@ -46,9 +43,46 @@ files=[
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220815-20220831.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220901-20220915.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20220915-20220930.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221001-20221015.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221015-20221031.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221201-20221215.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221215-20221231.csv"
 ]
 
+"""
+    0 SessionVisitorId
+    1 VisitPageNumber
+    2 VisitNumber
+    3 NewVisit
+    4 EventList
+    5 DateTime_UTC
+    6 PageURL
+    7 VisitReferrer
+    8 VisitReferrerType
+    9 VisitorDomain
+    10 External_Audience
+    11 External_AudienceSegment
+    12 External_Industry
+    13 External_Website
+    14 EloquaContactId
+    15 EloquaGUID
+    16 mcvisid
+    17 GeoCity
+    18 GeoCountry
+    19 GeoRegion
+    20 PDFurl
+    21 PDFpagecount
+    22 BingeId
+    23 BingeCriticalScore
+    24 BingeScoredAssetPath
+    25 BingeScoredAssetScore
 
+    BingeScoredAssetPath : /content/dam/rockwell-automation/sites/downloads/pdf/auto-ar001_-en-p.pdf
+    BingeScoredAssetPath : /content/rockwell-automation/www/na/us/en_US/company/news/case-studies/maximum-transparency-across-all-levels-at-samsung-sdi-battery-sy.html
+    BingeScoredAssetPath : /content/dam/rockwell-automation/videos/capabilities/machine-and-equipment-builders/the-augmented-workforce/the-augmented-workforce-en.mp4
+"""
 
 for file in files:
     print("Working on %s" % file)
@@ -65,9 +99,15 @@ for file in files:
             mcvisid=str(row[16]) or None
             GeoCountry=str(row[18]) or None
             DateTime="".join(["STR_TO_DATE(\"",DateTimeString, "\",\"%Y-%m-%d %H:%i:%S\")"])
+            BingeAssetPath=str(row[24]) or None
 
             executableStmt=stmt % (DateTime,PageURL,EloquaContactId,mcvisid,GeoCountry)
             cursor.execute(executableStmt)
+
+            if (BingeAssetPath is not None):
+                FullBingeAssetPath="https://www.rockwellautomation.com" + BingeAssetPath
+                executableStmt=stmt % (DateTime,FullBingeAssetPath,EloquaContactId,mcvisid,GeoCountry)
+                cursor.execute(executableStmt)
         except Exception as e:
             print("Import parse exception : %s" % e)
             print(row)
