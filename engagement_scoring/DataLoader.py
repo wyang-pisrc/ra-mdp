@@ -2,11 +2,10 @@ import re
 import os
 from datetime import date
 import pandas as pd
-from contentScoreShareUtils import email_cleanup
-from engagement_scoring.preprocessingUtils import mcvisid_label_assign
+from preprocessingUtils import mcvisid_label_assign, email_cleanup
 import glob
 
-class Scoring_DataLoader:
+class Query_DataLoader:
     def __init__(self, engine, preload=False, data_export_folder="./data/", data_import_folder="./data/"):
         self.today = str(date.today()).replace("-","")
         self.engine = engine
@@ -55,6 +54,7 @@ class Scoring_DataLoader:
     def save_elq_bridge(self):
         # store elq table
         if self.preload is False:
+            print("Processing elq table for In Koo pipeline...")
             elq_filename = f"elq_all_bridge-only_{self.today}.csv.gz"
             self.loading(elq_filename, self.get_email_mcvisid_query(), save_override=True)
         else:

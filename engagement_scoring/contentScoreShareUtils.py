@@ -1,131 +1,38 @@
 import pandas as pd
-# pd.set_option('display.float_format',lambda x : '%.5f' % x)
 import re
-from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.model_selection import train_test_split
-
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, classification_report
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sqlalchemy import create_engine
-import sqlalchemy
-from urllib.parse import quote
-from sqlalchemy.types import *
-
-# import matplotlib.pyplot as plt
-import numpy as np
-np.set_printoptions(suppress=True)
-
-from collections import Counter
-from sklearn import svm
-from sklearn.model_selection import cross_validate
-import os
 from glob import glob
-# from tqdm import tqdm
-# tqdm.pandas()
-
+import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore') 
 
-
-def mcvisid_label_assign(_lead, email_mcvisid):
-    crm_lead, drop_rows = email_cleanup(_lead, "emailaddress1")
-
-    statecodename_positive_rules = {"Qualified": 1}
-    statuscodename_positive_rules = {"Already Active Opportunity": 1, "Assigned to Distribution":1}
-    crm_lead["statecode_signal"] = crm_lead["statecodename"].map(statecodename_positive_rules).fillna(0)
-    crm_lead["statuscode_signal"] = crm_lead["statuscodename"].map(statuscodename_positive_rules).fillna(0)
-
-    def label_assign_rules(x):
-        target_cols = x[["statuscode_signal", "statecode_signal"]]
-        is_positive = target_cols.sum().sum()>0 # one of them is positive
-        return is_positive
-
-    ## signal aggregation as label
-    email_updated_label = crm_lead.groupby("emailaddress1").apply(lambda x: label_assign_rules(x)) 
-    email_updated_label = email_updated_label.reset_index()
-    email_updated_label.columns = ["EmailAddress", "label"]
-
-    mcvisid_labels = email_mcvisid.merge(email_updated_label, on="EmailAddress", how="left")
-    mcvisid_labels["label"].fillna(False, inplace=True)
-    # positive_mcvisid = mcvisid_labels[mcvisid_labels["label"] == True]["mcvisid"]
-    updated_labels = mcvisid_labels[["mcvisid","label"]].drop_duplicates()
-    return updated_labels
-
-
-def get_summary(table, field):
-    print("nan ratio:", table[field].isnull().sum()/table.shape[0])
-    print("nan rows: ", table[field].isnull().sum())
-    print(table[field].fillna("nan").value_counts())
     
-def email_cleanup(table, key="emailaddress1", drop_pattern="rockwell|pisrc|bounteous|test"):
-    if key not in table.columns:
-        raise "key is not in table.columns"
-    table = table.dropna(subset=[key]) # remove nan
-    table.loc[:, key] = table[key].str.replace("'", "").str.lower() # lower case, clean single quote
-    drop_rows = table[(table[key].str.contains(drop_pattern))] # remove rockwell related email
-    table = table[(~table[key].str.contains(drop_pattern))] # remove rockwell related email
-    return table, drop_rows
+
+def datetime_interval_iterator(event_start_month = 4, event_end_month=12):
+    months = [str(month).zfill(2) for month in range(event_start_month, event_end_month+2)] # +2 for iterator
+    month_pair = list(zip(months, months[1:]))
+    days = ["01", "15", "31"]
+    day_pair = list(zip(days, days[1:]))
+    month_max_days = {"04":"30", "06":"30","09":"30","11":"30"}
+
+    for (_start_month, _end_month) in month_pair:
+        span = 0
+        for (start_day, end_day) in day_pair:
+            span +=1
+            if span in [1,2]:
+                start_month, end_month = _start_month, _start_month
+            if span in [3,4]:
+                start_month, end_month = _end_month, _end_month
+
+            if (end_month in month_max_days.keys()) & (end_day == "31"):
+                end_day = "30"
+
+            print(f"Range month: 2022{start_month}{start_day}-2022{end_month}{end_day}")
+            yield start_month, start_day, end_month, end_day
 
 
-def url_clean(x):
-    x = re.sub(',|;', "", x) # clean special symbol
-    x = re.sub("(#).*", "", x)  # clean tailing start with
-    # x = re.sub("details.[\w-]*","details.{ID}", x) # grouping product details
-    x = re.sub("com.cn", "com", x) # replace china area website URL
-    # x = re.sub("%20", " ", x) # keep URL encoding
-    
-    # grouping different language
-    x = re.sub("/$|(\.html)$|/[a-z]{2}$", "", x, flags=re.I)  # remove html, extra /
-    x = re.sub("/(global|go)/", "/", x, flags=re.I) 
-    x = re.sub(".com/[a-z]{2,3}/", ".com/", x, flags=re.I)  
-    # x = re.sub("/[a-z]{2}[-_][a-z]{2,3}$", "", x, flags=re.I)  # grouping homepage with different country code
-    x = re.sub("/[a-z]{2}[-_][a-z]{2}[-_][a-z]{2}$", "", x, flags=re.I)  # grouping search page with different country code
-    x = re.sub("/[a-z]{2}[-_][a-z]{2,3}/|/[a-z]{2}/", "/", x, flags=re.I)  # grouping any children pages with different country code
-    
-    return x
-
-def url_filter(url_maps):
-    url_maps[(url_maps["PageURL"].str.startswith("https://www.rockwellautomation"))
-         & (~url_maps["PageURL"].str.contains("\.gif$|\.js$|file://|\/adfs\/|change\-password"))
-        ]
-    return url_maps
 
 
-def identify_pos(user_journey, label_type = 2):
-    if label_type == 1:
-        pos_code_statuscode = [953810011.0, 3.0, 953810008.0]
-        isPos = user_journey["statuscode"].isin(pos_code_statuscode).any()
-    elif label_type == 2:
-        pos_code_ra_leadstage = [6.0, 7.0, 8.0]
-        isPos = user_journey["ra_leadstage"].isin(pos_code_ra_leadstage).any()
-    return isPos
-
-def preprocessing_stage(user_journey, stage=1, target_method=0, feature_method="sequential", sep="$"):
-    if stage == 1:
-        if target_method == 0:
-            target_event = [125, 126]
-            events = ",".join(user_journey["EventList"].drop_duplicates().tolist())
-            y = any([True for e in target_event if "," + str(e) in events]) * 1
-        elif target_method == 1:
-            y = (~user_journey["EloquaContactId"].isnull()).any()
-        else:
-            raise "no such target_method"
-            
-    elif stage == 2:
-        y = any(user_journey["label"]) * 1
-    
-    if feature_method == "bow":
-        page_view = user_journey.groupby("BingeScoredAssetPath")["BingeScoredAssetPath"].size().to_dict() # dict vectorizer
-    elif feature_method == "sequential":
-        page_view = sep.join(user_journey.sort_values(by="DateTime_UTC")["BingeScoredAssetPath"].tolist())
-    else:
-        raise "no such feature_method"
-    
-    # init_scores = user_journey.groupby(["BingeScoredAssetPath"])[["BingeCriticalScore","BingeScoredAssetScore"]].mean() # not sure how to append as weighted matrix
-#     asset_user_journey_seq = user_journey.sort_values(by="DateTime_UTC")["BingeScoredAssetPath"].tolist()
-    return pd.Series([page_view, y], index=["features", "label"])
 
 def evaluate_metrics(y_test, y_pred, show_plots=False):
     fpr, tpr, thresholds = roc_curve(y_test, y_pred, pos_label=1)

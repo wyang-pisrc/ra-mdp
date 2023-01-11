@@ -1,0 +1,41 @@
+[database]
+host = localhost
+user = rockwell
+password = rockwell
+db = rockwell
+
+[mssql]
+server = sqlsvr-0092-mdp-02.85f8a2f57eaf.database.windows.net
+database = Staging
+username = pisrc-inkoo
+driver = ODBC+Driver+17+for+SQL+Server
+
+
+[data-import]
+path = /home/samuel/src/engagement_scoring/data/
+
+[data-export]
+path = /home/samuel/src/engagement_scoring/data/
+
+[report-export]
+path = /home/samuel/src/engagement_scoring/report/
+
+[snapshot-export]
+path = /home/samuel/src/engagement_scoring/snapshot/
+
+
+[ETL]
+is_preload = True
+parse_version = p1
+summary_version = v1
+is_month_break = False
+batch_size = 1000000
+BINGE_START_MONTH = 4
+BINGE_END_MONTH = 12
+exclude_products_URL = False
+
+
+[analyzer]
+key = clean_PageURL
+min_count = 10
+precision = 30
