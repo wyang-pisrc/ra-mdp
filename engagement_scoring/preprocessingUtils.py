@@ -3,13 +3,14 @@ import re
 import pandas as pd
 import numpy as np
 
-def email_cleanup(table, key="emailaddress1", exclude_test_email=False, drop_pattern="rockwell|pisrc|bounteous|test"):
+def email_cleanup(table, key="emailaddress1", exclude_test_email=True, drop_pattern=["rockwellautomation","@pisrc.com","@bounteous.com","@ra.rockwell.com","demandbaseexport"]):
     """
     Drop pattern should be None to keep
+    
     """
     if key not in table.columns:
         raise "key is not in table.columns"
-    
+    drop_pattern = "|".join(drop_pattern)
     drop_rows = None
     table = table.dropna(subset=[key]) # remove nan
     table.loc[:, key] = table[key].str.replace("'", "").str.lower() # lower case, clean single quote
@@ -18,6 +19,12 @@ def email_cleanup(table, key="emailaddress1", exclude_test_email=False, drop_pat
         table = table[(~table[key].str.contains(drop_pattern))] # remove rockwell related email
     return table, drop_rows
 
+
+def url_filter(url_maps):
+    url_maps = url_maps[(url_maps["PageURL"].str.startswith("https://www.rockwellautomation"))
+         & (~url_maps["PageURL"].str.contains("\.gif$|\.js$|file://|\/adfs\/|change\-password"))
+        ]
+    return url_maps
 
 def url_clean(x):
     x = urllib.parse.unquote(x)
@@ -42,11 +49,6 @@ def url_clean(x):
     return x
 
 
-def url_filter(url_maps):
-    url_maps = url_maps[(url_maps["PageURL"].str.startswith("https://www.rockwellautomation"))
-         & (~url_maps["PageURL"].str.contains("\.gif$|\.js$|file://|\/adfs\/|change\-password"))
-        ]
-    return url_maps
 
 def mcvisid_label_assign(_lead, email_mcvisid):
     neutral = 0
@@ -195,3 +197,12 @@ def aem_raw_preprocessing(aem_raw, valid_mcvisid, drop_mcvisid):
     log.append(stage1_raw["clean_PageURL"].unique().shape[0])
     
     return stage1_raw, log
+
+
+def search_params_parser(x, tag="keyword"):
+    tags = re.findall(f"{tag}=([^;]*)", x)
+    x = []
+    while "%" in tag :
+        tag = urllib.parse.unquote(tag)
+        x.append(tag)
+    return x

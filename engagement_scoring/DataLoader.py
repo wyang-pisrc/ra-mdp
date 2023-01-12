@@ -2,7 +2,7 @@ import re
 import os
 from datetime import date
 import pandas as pd
-from preprocessingUtils import mcvisid_label_assign, email_cleanup
+from preprocessingUtils import mcvisid_label_assign, email_cleanup, search_params_parser
 import glob
 
 class Query_DataLoader:
@@ -194,6 +194,22 @@ class Query_DataLoader:
             print(f"     Finished and stored into {absolute_filename}")
         
         return updated_labels, valid_mcvisid, drop_mcvisid
+
+    def load_mcvisid_keyword(self):
+        pass
+        # search_params_parser()
         
         
+    def load_mcvisid_search_tabs(self):
+        pass
+        # search_params_parser()
         
+    def load_mcvisid_job_title(self):
+        pass
+    
+    def load_mcvisid_industry(self):
+        pass
+    
+    
+# search_keys = aem_raw["VisitReferrer"].dropna().apply(lambda x: search_params_parser(x, "keyword"))
+# activate_tabs = aem_raw["VisitReferrer"].dropna().apply(lambda x: search_params_parser(x, "activeTab"))
