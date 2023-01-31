@@ -20,8 +20,8 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.txt')
         
-    password = "***REMOVED***" # remove pw after testing
-    # password = getpass.getpass('Enter database password: ')
+    # password = "***REMOVED***" # remove pw after testing
+    password = getpass.getpass('Enter database password: ')
     engine = sqlalchemy.create_engine(f"mssql+pyodbc://{config['mssql']['username']}:{password}@{config['mssql']['server']}/{config['mssql']['database']}?driver={config['mssql']['driver']}")
     session = engine.connect()
     
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, 
                         # format='%(asctime)s %(levelname)s %(module)s %(funcName)s %(message)s',
                         format='%(asctime)s %(message)s',
-                        handlers=[logging.FileHandler("logging_filename.log", mode='w'), stream_handler])
+                        handlers=[logging.FileHandler(f"{logging_filename}.log", mode='w'), stream_handler])
 
     ## data store + label assign
     dataLoader = Query_DataLoader(engine, config['ETL'].getboolean('is_preload'), config['data-export']['path'])
