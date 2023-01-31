@@ -15,6 +15,7 @@ Pyzmq = "==19.0.2"
 matplotlib = "*"
 fuzzywuzzy = "*"
 openpyxl = "*"
+apscheduler = "*"
 
 [dev-packages]
 
