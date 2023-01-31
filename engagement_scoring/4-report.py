@@ -18,22 +18,30 @@ if __name__ == '__main__':
     config.read('config.txt')
     snapshots_files = sorted(glob(config["snapshot-export"]["path"]+"*.csv"))
     key = config["analyzer"]["key"]
+    min_count = config["analyzer"].getint("min_count")
 
     print("Start aggregating and analyzing...")
-    pageAnalyzer = Analyzer(key, snapshots_files, config["analyzer"].getint("min_count"), config["report-export"]["path"])
-    panel_snapshot = pageAnalyzer.load_accumulated_snapshot()
+    pageAnalyzer = Analyzer(key, snapshots_files, config["report-export"]["path"])
+    panel_snapshot = pageAnalyzer.load_accumulated_snapshot(filter_columns=["lead-Good", "lead-Bad"], min_count=min_count)
     pageAnalyzer.save_accumulated_snapshot() # store the cumulative result
-    report = Analyzer.calc_metrics(panel_snapshot)
+    panel_report, bayesian_metrics, labelProportion = Analyzer.calc_metrics(panel_snapshot, key_column=key)
     
     # obtain export required metrics
-    probGoodLead = (report[["crmGood", "crmBad"]].sum(axis=0)/report[["crmGood", "crmBad"]].sum().sum())["crmGood"]
-    b = report[[key] + ["kYieldModified", "Traffic"]].set_index(key)
-    getcontext().prec = config["analyzer"].getint("precision")
-    b = b.applymap(Decimal)
-    url_scores = b.T.to_dict("list")
+    # getcontext().prec = 30
+    # Pandas default precision
     
-    # export json data
-    json_export = {"probGoodLead": Decimal(probGoodLead), "pathMetrics": url_scores}
-    with open("url_scores.json", 'wt', encoding='UTF-8') as f:
+    labelProportion = {k: Decimal(v) for k, v in labelProportion.items()}
+    pathMetrics = pd.concat([bayesian_metrics, panel_report["traffic"]], axis=1)
+    columnSchema = list(pathMetrics.columns)
+
+    pathMetrics_dense = pathMetrics.applymap(Decimal).T.to_dict("list")
+
+    json_export = {
+        "labelProportion": labelProportion,
+        "columnSchema": columnSchema,
+        "pathMetrics": pathMetrics_dense
+    }
+
+    with open("page_scores.json", 'wt', encoding='UTF-8') as f:
         json.dump(json_export, f, indent=4, cls=DecimalEncoder)
 

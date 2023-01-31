@@ -7,30 +7,35 @@ import warnings
 warnings.filterwarnings('ignore') 
 
     
+def datetime_interval_iterator(event_start_month=4, event_end_month=12, start_year=2022, end_year=2023):
 
-def datetime_interval_iterator(event_start_month = 4, event_end_month=12):
-    months = [str(month).zfill(2) for month in range(event_start_month, event_end_month+2)] # +2 for iterator
-    month_pair = list(zip(months, months[1:]))
     days = ["01", "15", "31"]
     day_pair = list(zip(days, days[1:]))
     month_max_days = {"04":"30", "06":"30","09":"30","11":"30"}
+    
+    for current_year in range(start_year, end_year+1):
+        if start_year == end_year:
+            months = [str(month).zfill(2) for month in range(event_start_month, event_end_month+2)] # +2 for iterator
+        elif current_year == end_year:
+            months = [str(month).zfill(2) for month in range(1, event_end_month+2)] # +2 for iterator
+        else:
+            months = [str(month).zfill(2) for month in range(event_start_month, 12+2)] # +2 for iterator
+            
+        month_pair = list(zip(months, months[1:]))
+        for (_start_month, _end_month) in month_pair:
+            span = 0
+            for (start_day, end_day) in day_pair:
+                span +=1
+                if span in [1,2]:
+                    start_month, end_month = _start_month, _start_month
+                if span in [3,4]:
+                    start_month, end_month = _end_month, _end_month
 
-    for (_start_month, _end_month) in month_pair:
-        span = 0
-        for (start_day, end_day) in day_pair:
-            span +=1
-            if span in [1,2]:
-                start_month, end_month = _start_month, _start_month
-            if span in [3,4]:
-                start_month, end_month = _end_month, _end_month
+                if (end_month in month_max_days.keys()) & (end_day == "31"):
+                    end_day = "30"
 
-            if (end_month in month_max_days.keys()) & (end_day == "31"):
-                end_day = "30"
-
-            print(f"Range month: 2022{start_month}{start_day}-2022{end_month}{end_day}")
-            yield start_month, start_day, end_month, end_day
-
-
+                print(f"Range month: {current_year}{start_month}{start_day}-{current_year}{end_month}{end_day}")
+                yield current_year, start_month, start_day, end_month, end_day
 
 
 

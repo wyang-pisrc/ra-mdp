@@ -2,7 +2,7 @@ import re
 import os
 from datetime import date
 import pandas as pd
-from preprocessingUtils import mcvisid_label_assign, email_cleanup
+from preprocessingUtils import mcvisid_crmlead_label_assign, email_cleanup, search_params_parser, mcvisid_elqcontact_jobLevel_assign, mcvisid_elqcontact_label_assign
 import glob
 
 class Query_DataLoader:
@@ -34,13 +34,13 @@ class Query_DataLoader:
         
         return df
             
-    def load_email_mcvisid(self):
+    def load_mcvisid_elqid_email(self):
         # read mcvisid_elqid_email_all into memory
         mcvisid_bridge_filename = f"mcvisid_elqid_email_all_{self.today}.csv.gz"        
-        email_mcvisid = self.loading(mcvisid_bridge_filename, self.get_email_mcvisid_query())
-        email_mcvisid, drop_mcvisid = email_cleanup(email_mcvisid, "EmailAddress")
-        valid_mcvisid = email_mcvisid["mcvisid"].drop_duplicates() ## all along the past, if mcvisid existed with corresponding elqid, then it is positive sigal
-        return email_mcvisid, valid_mcvisid, drop_mcvisid
+        mcvisid_elqid_email = self.loading(mcvisid_bridge_filename, self.get_mcvisid_elqid_email_query())
+        mcvisid_elqid_email, drop_mcvisid = email_cleanup(mcvisid_elqid_email, "EmailAddress")
+        valid_mcvisid = mcvisid_elqid_email["mcvisid"].drop_duplicates() ## all along the past, if mcvisid existed with corresponding elqid, then it is positive sigal
+        return mcvisid_elqid_email, valid_mcvisid, drop_mcvisid
 
     
     def load_crm_lead(self):
@@ -50,13 +50,19 @@ class Query_DataLoader:
         return _lead
     
 
+    def load_elq_contact(self):
+        # read crm_lead table in to memory
+        elq_filename = f"elq_Contact_IndustryJobs_{self.today}.csv.gz"
+        _elq = self.loading(elq_filename, self.get_elq_contact_query())
+        return _elq
+    
     
     def save_elq_bridge(self):
         # store elq table
         if self.preload is False:
             print("Processing elq table for In Koo pipeline...")
             elq_filename = f"elq_all_bridge-only_{self.today}.csv.gz"
-            self.loading(elq_filename, self.get_email_mcvisid_query(), save_override=True)
+            self.loading(elq_filename, self.get_elq_contact_query_Inkoo(), save_override=True)
         else:
             print("Skip elq_bridge updating since preload is False ")
 
@@ -67,7 +73,15 @@ class Query_DataLoader:
             """
         return s
     
-    def get_email_mcvisid_query(self):
+    def get_elq_contact_query(self):
+        s = f"""
+            SELECT DISTINCT elq.[EloquaContactId], elq.[EmailAddress], elq.[Company], elq.[Industry], elq.[JobFunction], elq.[JobLevel], elq.[JobTitle]
+            FROM [Staging].[elq].[Contact] AS elq
+            WHERE elq.[EloquaContactId]<>''
+            """
+        return s
+    
+    def get_mcvisid_elqid_email_query(self):
         s = f"""
             WITH TMP1 AS (
             SELECT DISTINCT [EloquaContactId], [mcvisid]
@@ -76,7 +90,7 @@ class Query_DataLoader:
             ), 
 
             TMP2 AS (
-            SELECT DISTINCT  TMP1.[mcvisid], elq.EloquaContactId, LOWER(elq.[EmailAddress]) AS "EmailAddress"
+            SELECT DISTINCT TMP1.[mcvisid], elq.EloquaContactId, elq.[EmailAddress]
             FROM [Staging].[elq].[Contact] AS elq
             INNER JOIN TMP1 ON TMP1.EloquaContactId = elq.EloquaContactId
             WHERE elq.EloquaContactId <> ''
@@ -87,16 +101,16 @@ class Query_DataLoader:
             """
         return s
     
-    def get_elq_bridge_only_query(self):
+    def get_elq_contact_query_Inkoo(self):
         s = f"""    
-            SELECT DISTINCT elq.[EloquaContactId], elq.[EmailAddress]
+            SELECT DISTINCT elq.[EloquaContactId], elq.[EmailAddress], elq.[Company], elq.[Industry], elq.[JobFunction], elq.[JobLevel], elq.[JobTitle]
             FROM [Staging].[elq].[Contact] AS elq
             WHERE elq.[EloquaContactId]<>''
             """
         return s
     
         
-    def generate_aemRaw_query(self, start_month, end_month, start_day, end_day):
+    def generate_aemRaw_query(self, current_year, start_month, end_month, start_day, end_day):
         s = f"""
             SELECT 
             -- ,[SessionVisitorId]
@@ -167,7 +181,7 @@ class Query_DataLoader:
             ,[BingeScoredAssetPath]
             -- ,[BingeScoredAssetScore]
             FROM [Staging].[aem].[RawTraffic]
-            WHERE (VisitStartDateTime >= '2022-{start_month}-{start_day}') AND (VisitStartDateTime < '2022-{end_month}-{end_day}')
+            WHERE (VisitStartDateTime >= '{current_year}-{start_month}-{start_day}') AND (VisitStartDateTime < '{current_year}-{end_month}-{end_day}')
             """
         return s
     
@@ -180,20 +194,151 @@ class Query_DataLoader:
     
     def load_updated_labels(self):
         ## label assign
-        email_mcvisid, valid_mcvisid, drop_mcvisid = self.load_email_mcvisid()
+        mcvisid_elqid_email, valid_mcvisid, drop_mcvisid = self.load_mcvisid_elqid_email()
+        print(f"    mcvisid_elqid_email: {mcvisid_elqid_email.shape}, valid_mcvisid: {valid_mcvisid.shape}, drop_mcvisid: {drop_mcvisid.shape}")
         
         absolute_filename = self.data_export_folder + f"updated_labels_{self.today}.csv.gz"
         if self.preload:
-            print("Loading processed mcvisid to updated_labels mapping table")
             filename = self.get_latest_filename(absolute_filename)
+            print("Loading processed mcvisid to updated_labels mapping table: ", filename)
             updated_labels = pd.read_csv(self.data_export_folder + filename, compression="gzip")
         else:
+            ######################################################
+            ######### extending more labels in here
+            ######################################################
             _lead = self.load_crm_lead()
-            updated_labels = mcvisid_label_assign(_lead, email_mcvisid)
+            updated_labels_lead = mcvisid_crmlead_label_assign(_lead, mcvisid_elqid_email)
+            
+            
+            ## hard coded version for labels in elq 
+            _elq = self.load_elq_contact()
+            source_map = self.load_JobLevel_SourceMap()
+            standardized_map = self.load_Standardized_JobLevel_Map()
+            code_mapper = {k: standardized_map[v] for k,v in source_map.items()}
+            print(code_mapper)
+            updated_labels_elq_jobLevel = mcvisid_elqcontact_jobLevel_assign(_elq, mcvisid_elqid_email, code_mapper)
+            
+            ## generalized version for labels in elq 
+            source_map = self.load_eloquaIndustry_SourceMap()
+            standardized_map = self.load_Standardized_eloquaIndustryMap()
+            code_mapper = {k: standardized_map[v] for k,v in source_map.items()}
+            print(code_mapper)
+            updated_labels_elq_industry = mcvisid_elqcontact_label_assign(_elq, mcvisid_elqid_email, code_mapper, source_mapping_filename = "eloquaIndustryMap_manual_v1.2_Wei_updated", key="Industry")
+
+            updated_labels = updated_labels_lead.merge(updated_labels_elq_jobLevel, how="left").merge(updated_labels_elq_industry)
+            
+            ### fill nan with 0
+            updated_labels.fillna(0, inplace=True)
             updated_labels.to_csv(absolute_filename, compression="gzip", index=None)
             print(f"     Finished and stored into {absolute_filename}")
         
         return updated_labels, valid_mcvisid, drop_mcvisid
+
+    def load_mcvisid_keyword(self):
+        pass
+        # search_params_parser()
         
         
+    def load_mcvisid_search_tabs(self):
+        pass
+        # search_params_parser()
+            
+    # search_keys = aem_raw["VisitReferrer"].dropna().apply(lambda x: search_params_parser(x, "keyword"))
+    # activate_tabs = aem_raw["VisitReferrer"].dropna().apply(lambda x: search_params_parser(x, "activeTab"))
+
+
+    def load_JobLevel_SourceMap(self):
+            
+        sourceMap = {
+        "role-Csuite": "role-Csuite",
+        "role-Manager": "role-Manager",
+        "role-Engineer": "role-Engineer",
+        "role-Marketing":  "role-Marketing",
+        "role-Unknown": "role-Unknown",
+        "role-Other":  "role-Other",
+        }
+        
+        return sourceMap
+
+
+    def load_Standardized_JobLevel_Map(self):
+        
+        Standardized_JobLevel_Map = {
+        "role-Csuite": 4,
+        "role-Manager": 3,
+        "role-Engineer": 2,
+        "role-Marketing": -1,
+        "role-Unknown": 0,
+        "role-Other": -1,
+        }
+        return Standardized_JobLevel_Map
+
+
+    def load_eloquaIndustry_SourceMap(self):
+        sourceMap = {'Aerospace': 'industry-Aerospace',
+        'Infrastructure': 'industry-Infrastructure',
+        'Automotive & Tire': 'industry-Automotive_Tire',
+        'Cement': 'industry-Cement',
+        'Chemical': 'industry-Chemical',
+        'Entertainment': 'industry-Entertainment',
+        'Fibers & Textiles': 'industry-Fibers_Textiles',
+        'Food & Beverage': 'industry-Food_Beverage',
+        'Glass': 'industry-Glass',
+        'HVAC': 'industry-HVAC',
+        'Household & Personal,Care': 'industry-Household_Personal_Care',
+        'Life Sciences': 'industry-Life_Sciences',
+        'Marine': 'industry-Marine',
+        'Metals': 'industry-Metals',
+        'Mining': 'industry-Mining',
+        'Oil & Gas': 'industry-Oil_Gas',
+        'Power Generation': 'industry-Power_Generation',
+        'Print & Publishing': 'industry-Print_Publishing',
+        'Pulp & Paper': 'industry-Pulp_Paper',
+        'Semiconductor': 'industry-Semiconductor',
+        'Whs EComm & Dist': 'industry-Whs_EComm_Dist',
+        'Waste Management': 'industry-Waste_Management',
+        'Water Wastewater': 'industry-Water_Wastewater',
+        'Other': 'industry-Other'} 
+        # label_map = {k: ("industry-" + "_".join(re.findall("\w+", k))) for k,v in Standardized_eloquaIndustryMap.items()}
+        return sourceMap
+        
+        
+    def load_Standardized_eloquaIndustryMap(self):
+
+        Standardized_eloquaIndustryMap = {'industry-Aerospace': 1,
+        'industry-Infrastructure': 13,
+        'industry-Automotive_Tire': 21,
+        'industry-Cement': 3,
+        'industry-Chemical': 4,
+        'industry-Entertainment': 5,
+        'industry-Fibers_Textiles': 6,
+        'industry-Food_Beverage': 7,
+        'industry-Glass': 8,
+        'industry-HVAC': 9,
+        'industry-Household_Personal_Care': 10,
+        'industry-Life_Sciences': 11,
+        'industry-Marine': 12,
+        'industry-Metals': 14,
+        'industry-Mining': 15,
+        'industry-Oil_Gas': 16,
+        'industry-Power_Generation': 22,
+        'industry-Print_Publishing': 18,
+        'industry-Pulp_Paper': 19,
+        'industry-Semiconductor': 20,
+        'industry-Whs_EComm_Dist': 23,
+        'industry-Waste_Management': 24,
+        'industry-Water_Wastewater': 25,
+        'industry-Other': -1}
+        # if not self.is_unique_mapper(Standardized_eloquaIndustryMap):
+        #     raise "this mapper is not defined correctly"
+
+        return Standardized_eloquaIndustryMap
+    
+    
+
+    def is_unique_mapper(self, mapper):
+        if len(mapper.values()) == len(set(mapper.values())):
+            return True
+        else:
+            return False
         
