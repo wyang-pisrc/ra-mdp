@@ -25,15 +25,17 @@ path = /home/samuel/src/engagement_scoring/snapshot/
 
 
 [ETL]
-is_preload = True
+is_preload = False
 parse_version = p1
 summary_version = v1
 is_month_break = False
 batch_size = 1000000
+BINGE_START_YEAR = 2022
 BINGE_START_MONTH = 4
-BINGE_END_MONTH = 12
+BINGE_END_YEAR = 2023
+BINGE_END_MONTH = 1
 exclude_products_URL = False
-
+only_cache_data = False
 
 [analyzer]
 key = clean_PageURL
