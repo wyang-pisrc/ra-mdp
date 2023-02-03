@@ -1,2 +1,5 @@
-curl -u wyang:$WYANG_AEM_PW  -X POST  -F file=@"page_scores.json" https://author1.dev.rockwellautomation.adobecqms.net/content/dam/rockwell-automation/sites/data.createasset.html
-curl -u wyang:$WYANG_AEM_PW  -X POST  -F file=@"page_scores.json" http://localhost:4502/content/dam/rockwell-automation/sites/data.createasset.html
+curl -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -X POST  -F file=@"page_scores.json" https://author1.dev.rockwellautomation.adobecqms.net/content/dam/rockwell-automation/sites/data.createasset.html
+curl -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -X POST "https://author1.dev.rockwellautomation.adobecqms.net/bin/rockwell-automation/content-score?path=/products/details.1794-oa16.html&key=autoEScore&value=refreshAutoMap"
+
+curl -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -X POST  -F file=@"page_scores.json" https://publish1.dev.rockwellautomation.adobecqms.net/content/dam/rockwell-automation/sites/data.createasset.html
+curl -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -X POST "https://publish1.dev.rockwellautomation.adobecqms.net/bin/rockwell-automation/content-score?path=/products/details.1794-oa16.html&key=autoEScore&value=refreshAutoMap"
