@@ -67,7 +67,8 @@ async function getData(corePath) {
     try {
         var params = {};
         var servletPath = SERVLET_PATH;
-        let url = `${servletPath}?path=${corePath}&key=autoEScore&akamai=ddd`;
+        let cacheTime = Date.now()%(1000*60*60*1); // 1 hour cache
+        let url = `${servletPath}?path=${corePath}&key=autoEScore&Date=${cacheTime}`;
         console.log(url);
         const response = await fetch(url, params);
         const resJson = await response.text();
