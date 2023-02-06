@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from Analyzer import Analyzer
@@ -31,6 +32,8 @@ if __name__ == '__main__':
     # Pandas default precision
     
     labelProportion = {k: Decimal(v) for k, v in labelProportion.items()}
+    
+    # pathMetrics = pd.concat([np.log(bayesian_metrics), panel_report["traffic"]], axis=1) # log version 
     pathMetrics = pd.concat([bayesian_metrics, panel_report["traffic"]], axis=1)
     columnSchema = list(pathMetrics.columns)
 
