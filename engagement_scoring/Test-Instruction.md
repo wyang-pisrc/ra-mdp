@@ -16,7 +16,8 @@
 
 
 ## Automated scheduled task
-1. Start the scheduler by `nohup python -m pipenv run python scoreScheduler.py > nohup_scheduler.log &`
+0. Enter the pipenv with `python -m pipenv shell`
+1. Start the scheduler by `nohup python scoreScheduler.py > nohup_scheduler.log &`
 2. Maintain by `ps -ef | grep scoreScheduler`
 
 

@@ -20,7 +20,7 @@ def main(isTest=False):
         # os.system("python -m pipenv run python 4-report.py")
 
         # upload to AEM target servers
-        os.system("curl -u wyang:$WYANG_AEM_PW  -X POST  -F file=@'page_scores.json' https://author1.dev.rockwellautomation.adobecqms.net/content/dam/rockwell-automation/sites/data.createasset.html")
+        os.system("./postJson-wyang.sh")
       
       except Exception as error:
         ### if error message, send email to wyang

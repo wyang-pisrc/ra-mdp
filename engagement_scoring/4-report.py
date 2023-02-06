@@ -47,4 +47,6 @@ if __name__ == '__main__':
 
     with open("page_scores.json", 'wt', encoding='UTF-8') as f:
         json.dump(json_export, f, indent=4, cls=DecimalEncoder)
+        
+    print("Finished data analyzing and store the json data")
 
