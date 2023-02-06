@@ -56,12 +56,6 @@ function getCorePath(url) {
     return null;
 }
 
-// file is not find
-// not servlet
-// edge
-
-getCorePath(window.location.href);
-
 async function getData(corePath) {
     try {
         var params = {};
@@ -93,32 +87,39 @@ function showPiSightCookie() {
 }
 
 function loadPreviousData(mcvisid) {
+    // TODO: update logic to retrieve default value or previous records from APIs
     // load from cookie
     var name = COOKIE_NAME;
     var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
     if (piSight) {
         console.log("regex:", piSight[1]);
         // console.log("piSight from Cookie", data);
-        cumMetrics = JSON.parse(piSight[1]);
+        userMetrics = JSON.parse(piSight[1]);
     } else if (mcvisid == undefined) {
-        cumMetrics = INIT_METRICS;
+        userMetrics = INIT_METRICS;
     } else {
-        // TODO:
-        cumMetrics = INIT_METRICS;
+        userMetrics = INIT_METRICS;
     }
 
-    return cumMetrics;
+    return userMetrics;
 }
 
-function calcOneCategoryBayesianProbability(updatedParts, category_proportion) {
-    let categoryLabels = Object.keys(category_proportion);
+function calcOneAspectBayesianProbability(updatedParts, aspect_proportion) {
+    let aspectLabels = Object.keys(aspect_proportion);
     var numerators = {};
     var denominator = DECIMAL_ZERO;
+    const isSorted = true;
 
-    for (let label of categoryLabels) {
+    // no-log multiply version
+    for (let label of aspectLabels) {
         let part = new BigDecimal(updatedParts[label]);
-        let proportion = new BigDecimal(category_proportion[label]);
-        let products = part.multiply(proportion);
+        let proportion = new BigDecimal(aspect_proportion[label]);
+        let products;
+        if (IS_LOG_VERSION) {
+            products = Math.exp(part.add(proportion)); // it will be really small number as well
+        } else {
+            products = part.multiply(proportion);
+        }
 
         numerators = Object.assign(numerators, {
             [label]: products,
@@ -127,22 +128,29 @@ function calcOneCategoryBayesianProbability(updatedParts, category_proportion) {
     }
 
     var probability = {};
-    for (let label of categoryLabels) {
+
+    for (let label of aspectLabels) {
+        let labelProb = numerators[label].divide(denominator.equal(DECIMAL_ZERO) ? "1.0" : denominator).toString();
         probability = Object.assign(probability, {
-            [label]: numerators[label].divide(denominator.equal(DECIMAL_ZERO) ? "1.0" : denominator).toString(),
+            [label]: labelProb,
         });
     }
 
-    return probability;
+    // sorted
+    if (isSorted) {
+        probability = Object.entries(probability).sort((a, b) => b[1] - a[1]);
+    }
+    flag = { [probability[0][0]]: probability[0][1] };
+    return [probability, flag];
 }
 
 // get the current conditional prob for each labels
-function getOneCategoryParts(category_kYields, category_proportion, traffic) {
-    let categoryLabels = Object.keys(category_proportion);
+function getOneAspectParts(aspect_kYields, aspect_proportion, traffic) {
+    let aspectLabels = Object.keys(aspect_proportion);
     var parts = {};
-    for (let label of categoryLabels) {
-        let kYield = new BigDecimal(category_proportion[label]);
-        let proportion = new BigDecimal(category_kYields[label]);
+    for (let label of aspectLabels) {
+        let kYield = new BigDecimal(aspect_proportion[label]);
+        let proportion = new BigDecimal(aspect_kYields[label]);
         let sharedTraffic = new BigDecimal(traffic);
         conditionalProbability = kYield.multiply(sharedTraffic).divide(proportion.equal(DECIMAL_ZERO) ? "1.0" : proportion);
         parts = Object.assign(parts, {
@@ -153,31 +161,43 @@ function getOneCategoryParts(category_kYields, category_proportion, traffic) {
 }
 
 // multiply with previous records
-function updateCulmulativeParts(previousParts, currentCategoryParts, currentCategoryName) {
-    if (!isConsistentCategory(previousParts) || !previousParts.hasOwnProperty(currentCategoryName)) {
+function updateCulmulativeParts(previousParts, currentAspectParts, currentAspectName) {
+    if (!isConsistentAspect(previousParts) || !previousParts.hasOwnProperty(currentAspectName)) {
         console.log("previousParts: ", previousParts);
-        console.log("currentCategoryName: ", currentCategoryName);
-        console.log("currentCategoryParts: ", currentCategoryParts);
+        console.log("currentAspectName: ", currentAspectName);
+        console.log("currentAspectParts: ", currentAspectParts);
         throw new Error("Data is not consistent when cumulating");
     }
 
-    var previousCategoryParts = previousParts[currentCategoryName];
-    // console.log("previousCategoryParts", previousCategoryParts);
+    var previousAspectParts = previousParts[currentAspectName];
+    // console.log("previousAspectParts", previousAspectParts);
     var culmulativeParts = {};
-    for (let label of Object.keys(previousCategoryParts)) {
-        let previous = new BigDecimal(previousCategoryParts[label]);
-        let current = new BigDecimal(currentCategoryParts[label]);
-        culmulativeParts = Object.assign(culmulativeParts, {
-            [label]: previous.multiply(current).toString(),
-            // TODO: multiply will lose number, change to add and expoential logarithm
-        });
+    if (IS_LOG_VERSION) {
+        // log sum version
+        for (let label of Object.keys(previousAspectParts)) {
+            let previous = parseFloat(previousAspectParts[label]);
+            let current = parseFloat(currentAspectParts[label]);
+            culmulativeParts = Object.assign(culmulativeParts, {
+                [label]: (previous + current).toPrecision(50),
+            });
+        }
+    } else {
+        // no-log multiply version
+        for (let label of Object.keys(previousAspectParts)) {
+            let previous = new BigDecimal(previousAspectParts[label]);
+            let current = new BigDecimal(currentAspectParts[label]);
+            culmulativeParts = Object.assign(culmulativeParts, {
+                [label]: previous.multiply(current).toString(),
+            });
+        }
     }
+
     return culmulativeParts;
 }
 
 // store the current culmulative result - tesing on refresh // // upload updatedParts to somewhere
 function uploadCulmulativeParts(updatedParts) {
-    if (!isConsistentCategory(updatedParts)) {
+    if (!isConsistentAspect(updatedParts)) {
         console.log("updatedParts: ", updatedParts);
         throw new Error("Data is not consistent when uploading");
     }
@@ -191,9 +211,9 @@ function identifySignal(profiles) {
     return true;
 }
 
-function isConsistentCategory(object) {
-    for (category of Object.keys(object)) {
-        if (!CATEGORIES.includes(category)) {
+function isConsistentAspect(object) {
+    for (let aspect of Object.keys(object)) {
+        if (!ASPECTS.includes(aspect)) {
             console.log("Object.keys(object): ", Object.keys(object));
             return false;
         }
@@ -208,38 +228,41 @@ async function piSightMain() {
         return;
     }
 
-    // var corePath = "/products/details.1794-oa16.html"
     var currentMetrics = await getData(corePath).then((data) => data);
     var traffic = currentMetrics["traffic"];
     if (traffic == undefined) {
         console.log("no valid records for this page URL yet.");
         return;
     }
-    var categories = CATEGORIES;
+    var aspects = ASPECTS;
 
     var previousParts = loadPreviousData();
     var result = {};
     var uploadParts = {};
-    for (let categoryName of categories) {
-        let category_kYields = Object.fromEntries(Object.entries(currentMetrics["kYieldModified"]).filter(([key]) => key.includes(categoryName)));
-        let category_proportion = Object.fromEntries(Object.entries(currentMetrics["labelProportion"]).filter(([key]) => key.includes(categoryName)));
-        let currentCategoryParts = getOneCategoryParts(category_kYields, category_proportion, traffic);
-        updatedParts = updateCulmulativeParts(previousParts, currentCategoryParts, categoryName);
-        probability = calcOneCategoryBayesianProbability(updatedParts, category_proportion);
+    var flags = {};
+    for (let aspectName of aspects) {
+        let aspect_kYields = Object.fromEntries(Object.entries(currentMetrics["kYieldModified"]).filter(([key]) => key.includes(aspectName)));
+        let aspect_proportion = Object.fromEntries(Object.entries(currentMetrics["labelProportion"]).filter(([key]) => key.includes(aspectName)));
+        let currentAspectParts = getOneAspectParts(aspect_kYields, aspect_proportion, traffic);
+        updatedParts = updateCulmulativeParts(previousParts, currentAspectParts, aspectName);
+        let [probability, flag] = calcOneAspectBayesianProbability(updatedParts, aspect_proportion);
 
         result = Object.assign(result, {
-            [categoryName]: probability,
+            [aspectName]: probability,
         });
         uploadParts = Object.assign(uploadParts, {
-            [categoryName]: updatedParts,
+            [aspectName]: updatedParts,
+        });
+        flags = Object.assign(flags, {
+            [aspectName]: flag,
         });
     }
 
     var profiles = {
         userMetrics: result,
+        flags: flags,
         pageMetrics: currentMetrics["kYieldModified"],
         pageTraffic: currentMetrics["traffic"],
-        // TODO: flag logic here
     };
 
     console.log("profiles : ", profiles);
@@ -248,9 +271,10 @@ async function piSightMain() {
 }
 
 const DECIMAL_ZERO = new BigDecimal("0.0");
-const CATEGORIES = ["lead", "role", "industry"];
+const ASPECTS = ["lead", "role", "industry"];
 const SERVLET_PATH = "https://dev-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
 const COOKIE_NAME = "piSight";
+const IS_LOG_VERSION = false;
 const INIT_METRICS = {
     lead: {
         "lead-Good": "0.00019055395032486849764986964526401956984882146847",
