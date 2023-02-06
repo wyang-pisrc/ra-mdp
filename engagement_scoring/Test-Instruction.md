@@ -26,13 +26,15 @@
 
 
 ## TODO
-2. add skip curl SSL credential verification
+1. change the probability calculation into exponential log plus
 3. add edge case examination -> stable
 4. add the calculation result into cookie
-5. find two or more different prediction result that make sense 
+5. find two or more different prediction result that make sense
+6. backtest result - accuracy
 
 
 ### Done
 3. config the ra-content-score-user in stage properly
 3. add stage env into curl post request
 1. add akamai no-cache header
+2. add skip curl SSL credential verification

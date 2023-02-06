@@ -56,8 +56,7 @@ function getCorePath(url) {
     return null;
 }
 
-
-// file is not find 
+// file is not find
 // not servlet
 // edge
 
@@ -67,7 +66,7 @@ async function getData(corePath) {
     try {
         var params = {};
         var servletPath = SERVLET_PATH;
-        let cacheTime = Date.now()%(1000*60*60*1); // 1 hour cache
+        let cacheTime = Date.now() % (1000 * 60 * 60 * 1); // 1 hour cache
         let url = `${servletPath}?path=${corePath}&key=autoEScore&Date=${cacheTime}`;
         console.log(url);
         const response = await fetch(url, params);
@@ -81,7 +80,14 @@ async function getData(corePath) {
 }
 
 function loadPreviousData(mcvisid) {
-    if (mcvisid == undefined) {
+    // load from cookie
+    var name = "piSight";
+    var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
+    if (piSight) {
+        data = JSON.parse(piSight[1]);
+        console.log("piSight from Cookie", data);
+        return data;
+    } else if (mcvisid == undefined) {
         // init params for a new user
         cumMetrics = {
             lead: {
@@ -122,8 +128,7 @@ function loadPreviousData(mcvisid) {
             },
         };
     } else {
-        // retrieve from some places for all the request history of this user
-        // assume load from cookie?
+        // retrieve from some places for all the request history of this user, assume load from cookie?
         // TODO:
         cumMetrics = {
             lead: {
@@ -240,6 +245,8 @@ function uploadCulmulativeParts(updatedParts) {
         throw new Error("Data is not consistent when uploading");
     }
     // TODO: upload to cookie?
+    document.cookie = "piSight=" + JSON.stringify(updatedParts);
+    console.log("update cookie with", document.cookie)
 }
 
 // based on metrics, what kind of user need to be flag
@@ -266,9 +273,12 @@ async function piSightMain() {
 
     // var corePath = "/products/details.1794-oa16.html"
     var currentMetrics = await getData(corePath).then((data) => data);
-
-    var categories = CATEGORIES;
     var traffic = currentMetrics["traffic"];
+    if (traffic == undefined) {
+        console.log("no valid records for this page URL yet.");
+        return;
+    }
+    var categories = CATEGORIES;
 
     var previousParts = loadPreviousData();
     var result = {};
@@ -291,6 +301,7 @@ async function piSightMain() {
     var report = {
         userMetrics: result,
         pageMetrics: currentMetrics["kYieldModified"],
+        pageTraffic: currentMetrics["traffic"],
         // TODO: flag logic here
     };
 
