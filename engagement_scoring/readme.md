@@ -31,9 +31,8 @@ python -m pipenv install apscheduler
 
 ## TODO
 1. change the probability calculation into exponential log plus (how to math.exp of BigDecimal)
-5. find two or more different prediction result that make sense
-6. backtest result - accuracy
-
+2. data align and compare
+3. Update the tracking visit list as a set
 
 ### Done
 4. add the calculation result into cookie
@@ -42,6 +41,9 @@ python -m pipenv install apscheduler
 1. add akamai no-cache header
 2. add skip curl SSL credential verification
 3. add edge case examination -> stable
+5. find two or more different prediction result that make sense
+6. backtest result - accuracy
+
 
 
 ### tracking parts -> losing digits in the end by multiply.

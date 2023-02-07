@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 jupyter = "*"
-sqlalchemy = "*"
+sqlalchemy = "==1.4.0"
 numpy = "*"
 pandas = "*"
 sklearn = "*"

@@ -58,19 +58,25 @@ function getCorePath(url) {
 
 async function getData(corePath) {
     try {
-        var params = {};
+        var params = { method: "GET" };
         var servletPath = SERVLET_PATH;
-        let cacheTime = Date.now() % (1000 * 60 * 60 * 1); // 1 hour cache
+        let cacheTime = Date.now() % (1000 * 60 * 60 * 1); // 1 hour cache -> best pratice -> response header
         let url = `${servletPath}?path=${corePath}&key=autoEScore&Date=${cacheTime}`;
         console.log(url);
-        const response = await fetch(url, params);
-        const resJson = await response.text();
-        return JSON.parse(resJson);
+        const response = await fetch(url, params)
+            .then((result) => {
+                if (result.status != 200) {
+                    throw new Error("Bad AEM Server Response");
+                }
+                return result.text();
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+        return JSON.parse(response);
     } catch (error) {
         console.warn("getData error", error);
     }
-
-    return null;
 }
 
 function resetPiSightCookie() {
@@ -268,48 +274,50 @@ async function piSightMain() {
     uploadCulmulativeParts(uploadParts);
 }
 
-const DECIMAL_ZERO = new BigDecimal("0.0");
-const ASPECTS = ["lead", "role", "industry"];
-const SERVLET_PATH = "https://dev-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
-const COOKIE_NAME = "piSight";
-const IS_LOG_VERSION = false;
+// for serving cold start user. Assume they visit the en-us homepage
 const INIT_METRICS = {
-    lead: {
-        "lead-Good": "0.00019055395032486849764986964526401956984882146847",
-        "lead-Bad": "0.00027838740522546474039834571319626403195745315322",
-    },
+    lead: { "lead-Good": "0.332185769665836405639680606327601708471775054931640625", "lead-Bad": "0.64247641634327001813886681702570058405399322509765625" },
     role: {
-        "role-Csuite": "0.00011615744779056498416210892481674499356931343851",
-        "role-Manager": "0.00011200623442667185735535349318170221505174240996",
-        "role-Engineer": "0.00044755775063276940941514180745670281190800814769",
-        "role-Other": "0.00040814116324538447421497290433989062577104273127",
+        "role-Csuite": "0.0258060603484974900034831790662792627699673175811767578125",
+        "role-Manager": "0.2012114001622929138068940346784074790775775909423828125",
+        "role-Engineer": "0.2323283994299165933217210522343521006405353546142578125",
+        "role-Other": "0.5087378156955304486785962581052444875240325927734375",
     },
     industry: {
-        "industry-Aerospace": "0.00000091157885784290416497492846986487564034348155",
-        "industry-Infrastructure": "0.00000016921523708461095293485821961638219528649226",
-        "industry-Automotive_Tire": "0.00019512483167724338414228081546536449695563730748",
-        "industry-Cement": "0.00000436138627195497218369754836185589425264761351",
-        "industry-Chemical": "0.00000459610418145943264052720439375396816063023979",
-        "industry-Entertainment": "0.0000001364639008746862398352694786625589822328429",
-        "industry-Fibers_Textiles": "0.00000337884618565723167126024987748037777571159964",
-        "industry-Food_Beverage": "0.00004301888011173609608838099929771329911056181043",
-        "industry-Glass": "0.00000014192245690967370496780432388387039883992368",
-        "industry-HVAC": "0.00000003275133620992470015031868589148233195551014",
-        "industry-Household_Personal_Care": "0.00000354806142274184265009364820722144173319437033",
-        "industry-Life_Sciences": "0.00000179586493551087108198280304399723948424039453",
-        "industry-Marine": "0.00000371727665982645321455040477496759749553668603",
-        "industry-Metals": "0.00000961251717761289960418732977717996191827640919",
-        "industry-Mining": "0.00000256006278040911381787199124351011568717408726",
-        "industry-Oil_Gas": "0.00001866280308362209177594035677367170837121136914",
-        "industry-Power_Generation": "0.00000051310426728882032393710950407045800246655754",
-        "industry-Print_Publishing": "0.00000061135827591859443733733561680724587943122718",
-        "industry-Pulp_Paper": "0.0000248237235737908446106835719587157514220014674",
-        "industry-Semiconductor": "0.00000453606006507457106793866340893785958407419841",
-        "industry-Whs_EComm_Dist": "0.",
-        "industry-Waste_Management": "0.",
-        "industry-Water_Wastewater": "0.0000104749690311409165570709045299283530469598853",
-        "industry-Other": "0.00028971510705522905333116453825112217874967277765",
+        "industry-Aerospace": "0.003878987921129240130924120677491373498924076557159423828125",
+        "industry-Infrastructure": "0.0002424367450705775081827575423432108436827547848224639892578125",
+        "industry-Automotive_Tire": "0.070549092815538061440605588359176181256771087646484375",
+        "industry-Cement": "0.050184406229609547500647437345833168365061283111572265625",
+        "industry-Chemical": "0.0089701595676113694832753964192306739278137683868408203125",
+        "industry-Entertainment": "0",
+        "industry-Fibers_Textiles": "0.002666804195776352644220441590050540980882942676544189453125",
+        "industry-Food_Beverage": "0.2802568773015876590903872056514956057071685791015625",
+        "industry-Glass": "0.000484873490141155016365515084686421687365509569644927978515625",
+        "industry-HVAC": "0",
+        "industry-Household_Personal_Care": "0.030789466623963347713388571946779848076403141021728515625",
+        "industry-Life_Sciences": "0.00121218372535288770354411358454171931953169405460357666015625",
+        "industry-Marine": "0.00751553909718790345839689592821741825900971889495849609375",
+        "industry-Metals": "0.055033141131021097447462153695596498437225818634033203125",
+        "industry-Mining": "0.01042478003803483377343042093343683518469333648681640625",
+        "industry-Oil_Gas": "0.1069146045761246999195037687968579120934009552001953125",
+        "industry-Power_Generation": "0.00096974698028231003273103016937284337473101913928985595703125",
+        "industry-Print_Publishing": "0.003151677685917507985846608420388292870484292507171630859375",
+        "industry-Pulp_Paper": "0.0654579211690559381597864785362617112696170806884765625",
+        "industry-Semiconductor": "0.00969746980282310162835290867633375455625355243682861328125",
+        "industry-Whs_EComm_Dist": "0",
+        "industry-Waste_Management": "0",
+        "industry-Water_Wastewater": "0.0305470298788927674404902745664003305137157440185546875",
+        "industry-Other": "0.255528329304388679421577990069636143743991851806640625",
     },
 };
+
+const DECIMAL_ZERO = new BigDecimal("0.0");
+const ASPECTS = ["lead", "role", "industry"];
+
+const SERVLET_PATH = window.location.origin + "/bin/rockwell-automation/content-score";
+// const SERVLET_PATH = "https://dev-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
+// const SERVLET_PATH = "https://qa-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
+const COOKIE_NAME = "piSight";
+const IS_LOG_VERSION = false;
 
 await piSightMain();

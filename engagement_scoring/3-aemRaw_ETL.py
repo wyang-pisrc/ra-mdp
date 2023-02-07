@@ -20,8 +20,8 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.txt')
         
-    # password = "Rb6!5(#3H/RpzB2" # remove pw after testing
-    password = getpass.getpass('Enter database password: ')
+
+    # password = getpass.getpass('Enter database password: ')
     engine = sqlalchemy.create_engine(f"mssql+pyodbc://{config['mssql']['username']}:{password}@{config['mssql']['server']}/{config['mssql']['database']}?driver={config['mssql']['driver']}")
     session = engine.connect()
     
@@ -36,9 +36,11 @@ if __name__ == '__main__':
 
     ## data store + label assign
     dataLoader = Query_DataLoader(engine, config['ETL'].getboolean('is_preload'), config['data-export']['path'])
-    # dataLoader.save_elq_bridge()
+    
+    if (config['ETL'].getboolean('save_elq_bridge_data')):
+        dataLoader.save_elq_bridge()
+        
     updated_labels, valid_mcvisid, drop_mcvisid = dataLoader.load_updated_labels() # including data storing and label assign
-
     if (config['ETL'].getboolean('only_cache_data')):
         exit()
         
