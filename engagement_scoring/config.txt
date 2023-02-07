@@ -12,16 +12,16 @@ driver = ODBC+Driver+17+for+SQL+Server
 
 
 [data-import]
-path = /home/samuel/src/engagement_scoring/data/
+path = ./data/
 
 [data-export]
-path = /home/samuel/src/engagement_scoring/data/
+path = ./data/
 
 [report-export]
-path = /home/samuel/src/engagement_scoring/report/
+path = ./report/
 
 [snapshot-export]
-path = /home/samuel/src/engagement_scoring/snapshot/
+path = ./snapshot/
 
 
 [ETL]

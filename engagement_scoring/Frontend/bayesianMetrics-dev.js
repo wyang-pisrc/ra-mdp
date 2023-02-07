@@ -1,6 +1,6 @@
 class BigDecimal {
     // Configuration: constants
-    static DECIMALS = 50; // number of decimals on all instances
+    static DECIMALS = 100; // number of decimals on all instances
     static ROUNDED = true; // numbers are truncated (false) or rounded (true)
     static SHIFT = BigInt("1" + "0".repeat(BigDecimal.DECIMALS)); // derived constant
     constructor(value) {
@@ -92,8 +92,7 @@ function loadPreviousData(mcvisid) {
     var name = COOKIE_NAME;
     var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
     if (piSight) {
-        console.log("regex:", piSight[1]);
-        // console.log("piSight from Cookie", data);
+        // console.log("regex:", piSight[1]);
         userMetrics = JSON.parse(piSight[1]);
     } else if (mcvisid == undefined) {
         userMetrics = INIT_METRICS;
@@ -144,7 +143,6 @@ function calcOneAspectBayesianProbability(updatedParts, aspect_proportion) {
     return [probability, flag];
 }
 
-// get the current conditional prob for each labels
 function getOneAspectParts(aspect_kYields, aspect_proportion, traffic) {
     let aspectLabels = Object.keys(aspect_proportion);
     var parts = {};
@@ -201,13 +199,13 @@ function uploadCulmulativeParts(updatedParts) {
         console.log("updatedParts: ", updatedParts);
         throw new Error("Data is not consistent when uploading");
     }
-    // TODO: upload to cookie?
+    // TODO: upload cookie to piraObj
     document.cookie = "piSight=" + JSON.stringify(updatedParts);
     // console.log("update cookie with", document.cookie)
 }
 
-// based on metrics, what kind of user need to be flag
 function identifySignal(profiles) {
+    // based on metrics, what kind of user need to be flag
     return true;
 }
 
@@ -260,7 +258,7 @@ async function piSightMain() {
 
     var profiles = {
         userMetrics: result,
-        flags: flags,
+        potentialFlags: flags,
         pageMetrics: currentMetrics["kYieldModified"],
         pageTraffic: currentMetrics["traffic"],
     };

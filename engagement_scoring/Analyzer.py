@@ -1,3 +1,4 @@
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import pandas as pd
 from datetime import date
@@ -148,3 +149,31 @@ class Analyzer:
 
         bayesian_metrics = pd.concat([lead_metrics, role_metrics, industry_metrics], axis=1)
         return panel_report, bayesian_metrics, labelProportion
+
+    @staticmethod
+    def mcvisid_probs(request_list, le, panel_report, bayesian_metrics, labelProportion):
+        """
+        should exclude unknown label by default
+        """
+        
+    
+        conditional_parts = bayesian_metrics.multiply(panel_report["traffic"], axis="rows").div(labelProportion, axis=1) 
+        conditional_parts = conditional_parts[conditional_parts.index.isin(le.classes_)]
+        conditional_parts.index = le.transform(conditional_parts.index)
+
+        def mcvisid_prob(request_list, conditional_parts, select_cols = ["lead-Good", "lead-Bad"]):
+            conditional_parts_mapper = conditional_parts[select_cols]
+            conditional_parts_mapper = np.log(conditional_parts_mapper + 1e-321) # take log and aviod zero
+            ratio1 = request_list["page_code"].apply(lambda x: conditional_parts_mapper.iloc[x].sum())
+            const = np.array([labelProportion[col] for col in select_cols])
+            nominators = np.exp(ratio1 + const)
+            probs = nominators.div(nominators.sum(axis=1), axis=0)
+            probs.index = request_list["mcvisid"]
+            return probs
+
+        mcvisid_prob1 = mcvisid_prob(request_list, conditional_parts, select_cols=["lead-Good", "lead-Bad"])
+        mcvisid_prob2 = mcvisid_prob(request_list, conditional_parts, select_cols=["role-Csuite", "role-Manager", "role-Engineer", "role-Other"])
+        mcvisid_prob3 = mcvisid_prob(request_list, conditional_parts, select_cols=['industry-Aerospace', 'industry-Infrastructure', 'industry-Automotive_Tire', 'industry-Cement', 'industry-Chemical', 'industry-Entertainment', 'industry-Fibers_Textiles', 'industry-Food_Beverage', 'industry-Glass', 'industry-HVAC', 'industry-Household_Personal_Care', 'industry-Life_Sciences', 'industry-Marine', 'industry-Metals', 'industry-Mining', 'industry-Oil_Gas', 'industry-Power_Generation', 'industry-Print_Publishing', 'industry-Pulp_Paper', 'industry-Semiconductor', 'industry-Whs_EComm_Dist', 'industry-Waste_Management', 'industry-Water_Wastewater', 'industry-Other'])
+        
+        result = pd.concat([request_list.set_index("mcvisid"), mcvisid_prob1, mcvisid_prob2, mcvisid_prob3], axis=1)
+        return result
