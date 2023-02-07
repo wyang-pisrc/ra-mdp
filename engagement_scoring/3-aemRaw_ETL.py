@@ -20,7 +20,7 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.txt')
         
-    # password = "***REMOVED***" # remove pw after testing
+    # password = "Rb6!5(#3H/RpzB2" # remove pw after testing
     password = getpass.getpass('Enter database password: ')
     engine = sqlalchemy.create_engine(f"mssql+pyodbc://{config['mssql']['username']}:{password}@{config['mssql']['server']}/{config['mssql']['database']}?driver={config['mssql']['driver']}")
     session = engine.connect()

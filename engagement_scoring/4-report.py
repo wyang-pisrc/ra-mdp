@@ -89,10 +89,11 @@ if __name__ == '__main__':
     request_list_prob = Analyzer.mcvisid_probs(request_list, le, panel_report, bayesian_metrics, labelProportion)
     request_list_prob.to_csv("./report/mcvisid_request_list_probs-server.csv")
     # request_list_prob.to_excel("./report/mcvisid_request_list_probs.xlsx")
-    
+    request_list_prob["request_count"] = request_list_prob["page_code"].apply(len)
+    target_list = request_list_prob[(request_list_prob["request_count"]>5) & (request_list_prob["request_count"]<500)]
+    target_list.to_excel("./report/mcvisid_request_list_probs_target.xlsx")
     
     ################################
     # validation - merge mcvisid label to compare
     ################################
-    
     

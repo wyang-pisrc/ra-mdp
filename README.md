@@ -10,6 +10,10 @@
     ```
 - Python formatting provider: `black`
 - SQL formatting provider: `SQLTools` VS code extension
+- Dependency management: pipenv + Pipfile
+- Down-sync into local with 
+  - `scp -r ra-mdp:~/src/\* ~/src/ra-mdp`
+  - `rsync -r --progress ra-mdp:~/src/\* ~/src/ra-mdp`
 
 ## Project structure
 
@@ -34,3 +38,10 @@
 ### Misc projects
 
 - Data collection for specific presentations or inquiries
+
+
+## Infra
+- RAM: 16GB
+- CPU: 2593MHZ, 4 cores, 8 threads
+- GPU: 0
+- Storage: 29GB -> 19GB available
