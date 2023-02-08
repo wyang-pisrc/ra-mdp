@@ -1,6 +1,6 @@
 class BigDecimal {
     // Configuration: constants
-    static DECIMALS = 100; // number of decimals on all instances
+    static DECIMALS = 50; // number of decimals on all instances
     static ROUNDED = true; // numbers are truncated (false) or rounded (true)
     static SHIFT = BigInt("1" + "0".repeat(BigDecimal.DECIMALS)); // derived constant
     constructor(value) {
@@ -56,7 +56,7 @@ function getCorePath(url) {
     return null;
 }
 
-async function getData(corePath) {
+async function fetchPageMetrics(corePath) {
     try {
         var params = { method: "GET" };
         var servletPath = SERVLET_PATH;
@@ -75,37 +75,31 @@ async function getData(corePath) {
             });
         return JSON.parse(response);
     } catch (error) {
-        console.warn("getData error", error);
+        console.warn("fetchPageMetrics error", error);
     }
 }
 
-function resetPiSightCookie() {
-    var name = COOKIE_NAME;
-    document.cookie = "piSight=" + JSON.stringify(INIT_METRICS);
-    var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
-    console.log("piSight", piSight[1]);
+function resetPiSightStorage() {
+    window.localStorage.removeItem(PISIGHT_LOCAL_STORAGE_NAME);
+    window.localStorage.removeItem(PISIGHT_VISITS_LOCAL_STORAGE_NAME);
 }
 
-function showPiSightCookie() {
-    var name = COOKIE_NAME;
-    var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
-    console.log("piSight", piSight[1]);
+function showPiSightStorage() {
+    console.log("piSight storage with: ", JSON.parse(window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME)));
+    console.log("piSight visited pages storage with: ", JSON.parse(window.localStorage.getItem(PISIGHT_VISITS_LOCAL_STORAGE_NAME)));
+    showPiSightProfile();
 }
 
-function loadPreviousData(mcvisid) {
-    // TODO: update logic to retrieve default value or previous records from APIs
-    // load from cookie
-    var name = COOKIE_NAME;
-    var piSight = document.cookie.match(new RegExp(name + "=([^;]+)"));
+function loadPreviousParts(mcvisid) {
+    var piSight = window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME); // document.cookie.match(new RegExp(name + "=([^;]+)"));
+
     if (piSight) {
-        // console.log("regex:", piSight[1]);
-        userMetrics = JSON.parse(piSight[1]);
-    } else if (mcvisid == undefined) {
+        userMetrics = JSON.parse(piSight);
+    } else if (mcvisid) {
         userMetrics = INIT_METRICS;
     } else {
         userMetrics = INIT_METRICS;
     }
-
     return userMetrics;
 }
 
@@ -199,15 +193,26 @@ function updateCulmulativeParts(previousParts, currentAspectParts, currentAspect
     return culmulativeParts;
 }
 
-// store the current culmulative result - tesing on refresh // // upload updatedParts to somewhere
-function uploadCulmulativeParts(updatedParts) {
+// store the current culmulative result
+function storeCulmulativeParts(updatedParts) {
     if (!isConsistentAspect(updatedParts)) {
         console.log("updatedParts: ", updatedParts);
         throw new Error("Data is not consistent when uploading");
     }
-    // TODO: upload cookie to piraObj
-    document.cookie = "piSight=" + JSON.stringify(updatedParts);
+
+    window.localStorage.setItem(PISIGHT_LOCAL_STORAGE_NAME, JSON.stringify(updatedParts));
+    // document.cookie = "piSight=" + JSON.stringify(updatedParts);
     // console.log("update cookie with", document.cookie)
+    // const byteSize = (str) => new Blob([str]).size;
+    // console.log("byteSize", byteSize(document.cookie));
+}
+
+function storePiSightProfile(profile) {
+    window.localStorage.setItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME, JSON.stringify(profile));
+}
+
+function showPiSightProfile() {
+    console.log("current user profile: ", JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME)));
 }
 
 function identifySignal(profiles) {
@@ -225,6 +230,31 @@ function isConsistentAspect(object) {
     return true;
 }
 
+function isNewVisitPage(corePath) {
+    if (typeof Storage !== "undefined") {
+        // Code for localStorage
+        let currentStorage = JSON.parse(window.localStorage.getItem(PISIGHT_VISITS_LOCAL_STORAGE_NAME));
+        if (!currentStorage) {
+            // init for local storage
+            window.localStorage.setItem(PISIGHT_VISITS_LOCAL_STORAGE_NAME, JSON.stringify([corePath]));
+            return true;
+        } else {
+            if (currentStorage.includes(corePath)) {
+                console.log("already visited corePath : ", corePath);
+                return false;
+            } else {
+                // valid new page
+                currentStorage.push(corePath);
+                window.localStorage.setItem(PISIGHT_VISITS_LOCAL_STORAGE_NAME, JSON.stringify(currentStorage));
+                return true;
+            }
+        }
+    } else {
+        console.log("browser is not supporting local storage for Pisight");
+        return false;
+    }
+}
+
 async function piSightMain() {
     var corePath = getCorePath(window.location.href);
     if (corePath == undefined) {
@@ -232,7 +262,12 @@ async function piSightMain() {
         return;
     }
 
-    var currentMetrics = await getData(corePath).then((data) => data);
+    if (!isNewVisitPage(corePath)) {
+        showPiSightProfile();
+        return;
+    }
+
+    var currentMetrics = await fetchPageMetrics(corePath).then((data) => data);
     var traffic = currentMetrics["traffic"];
     if (traffic == undefined) {
         console.log("no valid records for this page URL yet.");
@@ -240,7 +275,7 @@ async function piSightMain() {
     }
     var aspects = ASPECTS;
 
-    var previousParts = loadPreviousData();
+    var previousParts = loadPreviousParts();
     var result = {};
     var uploadParts = {};
     var flags = {};
@@ -269,9 +304,16 @@ async function piSightMain() {
         pageTraffic: currentMetrics["traffic"],
     };
 
-    console.log("profiles : ", profiles);
-    console.log("uploadParts: ", uploadParts);
-    uploadCulmulativeParts(uploadParts);
+    // Verbose only
+    for (let aspect of Object.keys(profiles["potentialFlags"])) {
+        console.log("highest prob in aspect:", aspect);
+        console.log(profiles["potentialFlags"][aspect]);
+    }
+    // console.log("profiles[potentialFlags] : ", profiles["potentialFlags"]);
+    // console.log("profiles[userMetrics] : ", profiles["userMetrics"]);
+    // console.log("uploadParts[lead]: ", uploadParts["lead"]);
+    storePiSightProfile(profiles);
+    storeCulmulativeParts(uploadParts);
 }
 
 // for serving cold start user. Assume they visit the en-us homepage
@@ -317,7 +359,10 @@ const ASPECTS = ["lead", "role", "industry"];
 const SERVLET_PATH = window.location.origin + "/bin/rockwell-automation/content-score";
 // const SERVLET_PATH = "https://dev-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
 // const SERVLET_PATH = "https://qa-aem.rockwellautomation.com/bin/rockwell-automation/content-score";
-const COOKIE_NAME = "piSight";
+const PISIGHT_LOCAL_STORAGE_NAME = "piSight";
+const PISIGHT_VISITS_LOCAL_STORAGE_NAME = "piSightVisitedPages";
+const PISIGHT_PROFILE_LOCAL_STORAGE_NAME = "piSightProfile";
 const IS_LOG_VERSION = false;
 
+resetPiSightStorage();
 await piSightMain();
