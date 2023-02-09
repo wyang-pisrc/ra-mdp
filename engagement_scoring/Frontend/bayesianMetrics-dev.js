@@ -314,7 +314,7 @@ async function piSightMain(overrideCorePath) {
     }
 }
 
-function piSightMainTest() {
+async function piSightMainTest() {
     resetPiSightStorage();
     TEST_INPUTS = [
         "/en-us.html",
@@ -330,7 +330,7 @@ function piSightMainTest() {
         "/products/software/factorytalk/designsuite/studio-5000/simulation-interface.html",
     ];
     for (let overridePage of TEST_INPUTS) {
-        piSightMain(overridePage);
+        await piSightMain(overridePage);
     }
 }
 
@@ -345,4 +345,4 @@ const VERBOSE = true;
 // resetPiSightStorage();
 // await piSightMain();
 
-piSightMainTest();
+await piSightMainTest();
