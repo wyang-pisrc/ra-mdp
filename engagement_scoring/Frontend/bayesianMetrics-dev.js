@@ -89,6 +89,41 @@ function showPiSightStorage() {
     console.log("piSight profile storage with: ", JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME)));
 }
 
+function storePiSightProfile(profile) {
+    window.localStorage.setItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME, JSON.stringify(profile));
+}
+
+function getPiSightProfile() {
+    return JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME));
+}
+
+function showPiSightProfile() {
+    console.log("current user profile: ", getPiSightProfile());
+}
+
+function identifySignal(userProfiles) {
+    if (!userProfiles) {
+        userProfiles = JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME));
+    }
+
+    for (let aspect of Object.keys(userProfiles["potentialFlags"])) {
+        console.log(`highest prob in ${aspect} aspect:`);
+        console.log(userProfiles["potentialFlags"][aspect]);
+    }
+
+    return true;
+}
+
+function getVisitedPages() {
+    let currentStorage = getPiSightProfile();
+    if (currentStorage && Object.keys(currentStorage).includes("visitedPages")) {
+        return currentStorage["visitedPages"];
+    } else {
+        resetPiSightStorage();
+        return [];
+    }
+}
+
 function hasPreviousParts() {
     if (typeof Storage !== "undefined") {
         if (window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME)) {
@@ -192,6 +227,15 @@ function getOneAspectMetrics(aspectName, allPageMetrics) {
     return [aspectKYields, aspectProportion];
 }
 
+function isConsistentAspect(object) {
+    for (let aspect of Object.keys(object)) {
+        if (!ASPECTS.includes(aspect)) {
+            console.log("Object.keys(object): ", Object.keys(object));
+            return false;
+        }
+    }
+    return true;
+}
 // store the current culmulative result
 function storeCulmulativeParts(updatedParts) {
     if (!isConsistentAspect(updatedParts)) {
@@ -202,53 +246,9 @@ function storeCulmulativeParts(updatedParts) {
     window.localStorage.setItem(PISIGHT_LOCAL_STORAGE_NAME, JSON.stringify(updatedParts));
 }
 
-function storePiSightProfile(profile) {
-    window.localStorage.setItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME, JSON.stringify(profile));
-}
+async function piSightMain(overrideCorePath) {
+    var corePath = overrideCorePath == undefined ? getCorePath(window.location.href) : overrideCorePath;
 
-function getPiSightProfile() {
-    return JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME));
-}
-
-function showPiSightProfile() {
-    console.log("current user profile: ", getPiSightProfile());
-}
-
-function identifySignal(userProfiles) {
-    if (!userProfiles) {
-        userProfiles = JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME));
-    }
-
-    for (let aspect of Object.keys(userProfiles["potentialFlags"])) {
-        console.log(`highest prob in ${aspect} aspect:`);
-        console.log(userProfiles["potentialFlags"][aspect]);
-    }
-
-    return true;
-}
-
-function isConsistentAspect(object) {
-    for (let aspect of Object.keys(object)) {
-        if (!ASPECTS.includes(aspect)) {
-            console.log("Object.keys(object): ", Object.keys(object));
-            return false;
-        }
-    }
-    return true;
-}
-
-function getVisitedPages() {
-    let currentStorage = getPiSightProfile();
-    if (currentStorage && Object.keys(currentStorage).includes("visitedPages")) {
-        return currentStorage["visitedPages"];
-    } else {
-        resetPiSightStorage();
-        return [];
-    }
-}
-
-async function piSightMain() {
-    var corePath = getCorePath(window.location.href);
     if (corePath == undefined) {
         console.log("untracking corePath for: ", window.location.href);
         return;
@@ -314,6 +314,26 @@ async function piSightMain() {
     }
 }
 
+function piSightMainTest() {
+    resetPiSightStorage();
+    TEST_INPUTS = [
+        "/en-us.html",
+        "/capabilities/academy-advanced-manufacturing.html",
+        "/support/customer-care.html",
+        "/support/product/product-compatibility-migration/migration-modernization.html",
+        "/products/hardware/allen-bradley/motion-control.html",
+        "/products/software/factorytalk/designsuite/emulate.html",
+        "/products/software/factorytalk/operationsuite/mes/plex-quality-management-system.html",
+        "/products/software/factorytalk/designsuite.html",
+        "/products/software/factorytalk/designsuite/studio-5000/studio-5000-architect.html",
+        "/products/software/factorytalk/designsuite/logix-echo.html",
+        "/products/software/factorytalk/designsuite/studio-5000/simulation-interface.html",
+    ];
+    for (let overridePage of TEST_INPUTS) {
+        piSightMain(overridePage);
+    }
+}
+
 const DECIMAL_ZERO = new BigDecimal("0.0");
 const ASPECTS = ["lead", "role", "industry"];
 const SERVLET_PATH = window.location.origin + "/bin/rockwell-automation/content-score";
@@ -321,5 +341,8 @@ const PISIGHT_LOCAL_STORAGE_NAME = "piSight";
 const PISIGHT_PROFILE_LOCAL_STORAGE_NAME = "piSightProfile";
 const IS_LOG_VERSION = false;
 const VERBOSE = true;
+
 // resetPiSightStorage();
-await piSightMain();
+// await piSightMain();
+
+piSightMainTest();
