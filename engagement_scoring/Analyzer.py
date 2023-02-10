@@ -18,7 +18,7 @@ class Analyzer:
             print(f"loading {file}")
             dts = pd.concat([dts, pd.read_csv(file)], axis=0)
         result = dts.groupby(self.agg_key).sum()
-        self.panel_snapshot = result[result[filter_columns].sum(axis=1) > min_count].reset_index()
+        self.panel_snapshot = result[(result[filter_columns].sum(axis=1) > min_count) & (result["lead-Good"]>0)].reset_index()
         return self.panel_snapshot
     
     def save_accumulated_snapshot(self):

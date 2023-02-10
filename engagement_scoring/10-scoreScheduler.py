@@ -13,6 +13,7 @@ def main(isTest=False):
       
       try:
         # run ETL
+        os.system("python 3-aemRaw_ETL.py")
         # os.system("python -m pipenv run python 3-aemRaw_ETL.py")
 
         # run report to generate page_scores.json

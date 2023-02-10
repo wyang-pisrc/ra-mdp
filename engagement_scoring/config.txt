@@ -19,7 +19,7 @@ path = ./data/
 
 [report-export]
 path = ./report/
-
+report_version = 01
 [snapshot-export]
 path = ./snapshot/
 
@@ -35,8 +35,8 @@ BINGE_START_MONTH = 4
 BINGE_END_YEAR = 2023
 BINGE_END_MONTH = 1
 exclude_products_URL = False
-save_elq_bridge_data = True
-only_cache_data = True
+save_elq_bridge_data = False
+only_cache_data = False
 
 [analyzer]
 key = clean_PageURL
