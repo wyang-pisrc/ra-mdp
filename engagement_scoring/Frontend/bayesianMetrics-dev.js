@@ -60,7 +60,7 @@ async function fetchPageMetrics(corePath) {
     try {
         var params = { method: "GET" };
         var servletPath = SERVLET_PATH;
-        let cacheTime = Date.now() % (1000 * 60 * 60 * 24); // 24 hour cache -> best pratice -> response header
+        let cacheTime = Date.now() % (1000 * 60 * 60 * 1); // 24 hour cache -> best pratice -> response header
         let url = `${servletPath}?path=${corePath}&key=autoEScore&Date=${cacheTime}`;
         console.log(url);
         const response = await fetch(url, params)
@@ -99,6 +99,14 @@ function getPiSightProfile() {
 
 function showPiSightProfile() {
     console.log("current user profile: ", getPiSightProfile());
+}
+
+function showLeadPrediction() {
+    userProfiles = JSON.parse(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME));
+    console.log(`lead aspect:`);
+    for (metrics of userProfiles["userMetrics"]["lead"]) {
+        console.log(metrics[0], parseFloat(metrics[1]));
+    }
 }
 
 function identifySignal(userProfiles) {
@@ -164,6 +172,11 @@ function calcOneAspectBayesianProbability(updatedParts, aspectProportion) {
     for (let label of aspectLabels) {
         let labelProb = numerators[label].divide(denominator.equal(DECIMAL_ZERO) ? "1.0" : denominator).toString();
         probability = { ...probability, [label]: labelProb };
+        if (label.includes("lead") & (VERBOSE == -3)) {
+            console.log(label);
+            console.log("numerators[label]", numerators[label].toString());
+            console.log("labelProb", labelProb.toString());
+        }
     }
 
     if (isSorted) {
@@ -177,10 +190,17 @@ function calcOneAspectParts(aspectKYields, aspectProportion, traffic) {
     let aspectLabels = Object.keys(aspectProportion);
     var parts = {};
     for (let label of aspectLabels) {
-        let kYield = new BigDecimal(aspectProportion[label]);
-        let proportion = new BigDecimal(aspectKYields[label]);
+        let kYield = new BigDecimal(aspectKYields[label]);
+        let proportion = new BigDecimal(aspectProportion[label]);
         let sharedTraffic = new BigDecimal(traffic);
         conditionalProbability = kYield.multiply(sharedTraffic).divide(proportion.equal(DECIMAL_ZERO) ? "1.0" : proportion);
+        if (VERBOSE == -1 && label.includes("lead")) {
+            console.log(label);
+            console.log("kYield", kYield.toString());
+            console.log("proportion", proportion.toString());
+            console.log("sharedTraffic", sharedTraffic.toString());
+        }
+
         parts = { ...parts, [label]: conditionalProbability.toString() };
     }
     return parts;
@@ -224,7 +244,7 @@ function isConsistentAspect(allVisitedConditionalParts, allPageMetrics) {
         for (let aspect of ASPECTS) {
             if (!Object.keys(firstPiSight).includes(aspect)) {
                 console.log("Object.keys(firstPiSight): ", Object.keys(firstPiSight));
-                console.log("page metrics updated, please check ")
+                console.log("page metrics updated, please check ");
                 return false;
             }
         }
@@ -240,7 +260,7 @@ function storeVisitedParts(allVisitedConditionalParts) {
     }
     window.localStorage.setItem(PISIGHT_LOCAL_STORAGE_NAME, JSON.stringify(allVisitedConditionalParts));
 
-    if (VERBOSE > 1) {
+    if (VERBOSE > 2) {
         var i = 0;
         for (k of Object.keys(allVisitedConditionalParts)) {
             i += 1;
@@ -281,7 +301,7 @@ async function piSightMain(overrideCorePath) {
     var isConsistent = isConsistentAspect(allVisitedConditionalParts, allPageMetrics);
     if (!isConsistent) {
         isNewVisitor = true;
-        allVisitedConditionalParts = []; 
+        allVisitedConditionalParts = [];
         resetPiSightStorage();
     } else {
         isNewVisitor = false;
@@ -298,11 +318,12 @@ async function piSightMain(overrideCorePath) {
         if (!isNewVisitor) {
             for (let [i, previousAspectParts] of allVisitedConditionalParts.map((part) => part[aspectName]).entries()) {
                 culmulativeParts = calcOneCulmulativeParts(previousAspectParts, culmulativeParts);
-                if (VERBOSE == -1) {
-                    console.log(`${aspectName}:  ${i},  culmulativeParts: , `, culmulativeParts);
-                }
             }
         }
+        if (VERBOSE == -2 && aspectName.includes("lead")) {
+            console.log(`${aspectName}:  ${i},  culmulativeParts: , `, culmulativeParts);
+        }
+
         let [probability, flag] = calcOneAspectBayesianProbability(culmulativeParts, aspectProportion);
 
         pageConditionalParts = { ...pageConditionalParts, [aspectName]: currentAspectParts };
@@ -321,7 +342,7 @@ async function piSightMain(overrideCorePath) {
     storePiSightProfile(userProfiles); // current user profile
     storeVisitedParts(allVisitedConditionalParts);
 
-    if (VERBOSE > 0) {
+    if (VERBOSE > 1) {
         identifySignal(userProfiles);
         const byteSize = (str) => new Blob([str]).size;
         console.log(
@@ -329,23 +350,27 @@ async function piSightMain(overrideCorePath) {
             byteSize(window.localStorage.getItem(PISIGHT_PROFILE_LOCAL_STORAGE_NAME)) + byteSize(window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME))
         );
     }
+    if (VERBOSE > 0) {
+        showLeadPrediction();
+    }
 }
 
 async function piSightMainTest() {
     resetPiSightStorage();
+    // GOOD CASE IN PYTHON
+    // TEST_INPUTS = [
+    //     "/products.html",
+    //     "/capabilities/industrial-cybersecurity/products-services/vulnerability-assessment.html",
+    //     "/products/hardware/allen-bradley/network-security-and-infrastructure/ethernet-networks/stratix-2500-lightly-managed.html",
+    //     "/company/events/webinars/technology-partner-genius-webinar-with-spectrum-controls.html",
+    // ];
+
+    // BAD CASE IN PYTHON
     TEST_INPUTS = [
-        "/products/details.700-hk32z12-4.html",
-        "/products/details.2711p-t6m20d.html",
-        "/products/details.800f-n3w.html",
-        "/products/hardware/allen-bradley/relays-and-timers/general-purpose-timing-relays-and-counters/700-ht-tube-base.html",
-        "/products/details.6200t-15wa.html",
-        "/products/details.42af-p2mab1-f4.html",
-        "/products/details.1794-ie8.html",
-        "/products/details.4983-ds480-403.html",
-        "/company/news/case-studies/pyradia-pilot-coating.html",
-        "/products/details.2198-e1004-ers.html",
-        "/products/hardware/allen-bradley/motion-control/linear-servo-motors.html",
-        "/products/details.700-hc22a1-99.html"
+        "/capabilities/industrial-automation-control/design-and-configuration-software.html",
+        "/en-us.html",
+        "/products/software/factorytalk/designsuite/studio-5000/studio-5000-logix-emulate.html",
+        "/capabilities/industrial-automation-control/design-and-configuration-software/ccw-software-training-videos.html",
     ];
     for (let [i, overridePage] of TEST_INPUTS.entries()) {
         console.log(i);
@@ -359,9 +384,9 @@ const SERVLET_PATH = window.location.origin + "/bin/rockwell-automation/content-
 const PISIGHT_LOCAL_STORAGE_NAME = "piSight";
 const PISIGHT_PROFILE_LOCAL_STORAGE_NAME = "piSightProfile";
 const IS_LOG_VERSION = false; // NOT SUPPORT LOG VERSION YET
-const VERBOSE = 4;
+const VERBOSE = 1;
 const MAX_TRACKING_LENGTH = 20;
 // resetPiSightStorage();
-await piSightMain();
+// await piSightMain();
 
-// await piSightMainTest();
+await piSightMainTest();
