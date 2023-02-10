@@ -1,6 +1,6 @@
 class BigDecimal {
     // Configuration: constants
-    static DECIMALS = 80; // number of decimals on all instances
+    static DECIMALS = 100; // number of decimals on all instances
     static ROUNDED = true; // numbers are truncated (false) or rounded (true)
     static SHIFT = BigInt("1" + "0".repeat(BigDecimal.DECIMALS)); // derived constant
     constructor(value) {
@@ -60,7 +60,7 @@ async function fetchPageMetrics(corePath) {
     try {
         var params = { method: "GET" };
         var servletPath = SERVLET_PATH;
-        let cacheTime = Date.now() % (1000 * 60 * 60 * 1); // 1 hour cache -> best pratice -> response header
+        let cacheTime = Date.now() % (1000 * 60 * 60 * 24); // 24 hour cache -> best pratice -> response header
         let url = `${servletPath}?path=${corePath}&key=autoEScore&Date=${cacheTime}`;
         console.log(url);
         const response = await fetch(url, params)
@@ -124,31 +124,18 @@ function getVisitedPages() {
     }
 }
 
-function hasPreviousParts() {
-    if (typeof Storage !== "undefined") {
-        if (window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME)) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        console.log("browser is not supporting local storage for Pisight");
-        return false;
-    }
-}
-
-function loadPreviousParts(aspectName, mcvisid) {
+function getAllPreviousParts(mcvisid) {
+    var allVisitedConditionalParts = [];
     var piSight = window.localStorage.getItem(PISIGHT_LOCAL_STORAGE_NAME);
 
     if (piSight) {
-        userMetrics = JSON.parse(piSight)[aspectName];
+        allVisitedConditionalParts = JSON.parse(piSight);
     }
 
     if (mcvisid) {
-        // TODO: if user visited records upload to cloud
-        // userMetrics = INIT_METRICS[aspectName];
+        // TODO: if user visited records upload to cloud. e.g. if user login, then retrieve the data on cloud and override the local one.
     }
-    return userMetrics;
+    return allVisitedConditionalParts;
 }
 
 function calcOneAspectBayesianProbability(updatedParts, aspectProportion) {
@@ -227,23 +214,39 @@ function getOneAspectMetrics(aspectName, allPageMetrics) {
     return [aspectKYields, aspectProportion];
 }
 
-function isConsistentAspect(object) {
-    for (let aspect of Object.keys(object)) {
-        if (!ASPECTS.includes(aspect)) {
-            console.log("Object.keys(object): ", Object.keys(object));
-            return false;
+function isConsistentAspect(allVisitedConditionalParts, allPageMetrics) {
+    if (allVisitedConditionalParts == undefined || allVisitedConditionalParts.length == 0) {
+        return false;
+    }
+
+    if (allVisitedConditionalParts.length > 0) {
+        let firstPiSight = allVisitedConditionalParts[0];
+        for (let aspect of ASPECTS) {
+            if (!Object.keys(firstPiSight).includes(aspect)) {
+                console.log("Object.keys(firstPiSight): ", Object.keys(firstPiSight));
+                console.log("page metrics updated, please check ")
+                return false;
+            }
         }
     }
+
     return true;
 }
-// store the current culmulative result
-function storeCulmulativeParts(updatedParts) {
-    if (!isConsistentAspect(updatedParts)) {
-        console.log("updatedParts: ", updatedParts);
-        console.log("Data is not consistent when storing, reset local storage");
-        resetPiSightStorage();
+
+// store the current result
+function storeVisitedParts(allVisitedConditionalParts) {
+    if (allVisitedConditionalParts.length >= MAX_TRACKING_LENGTH) {
+        allVisitedConditionalParts.shift();
     }
-    window.localStorage.setItem(PISIGHT_LOCAL_STORAGE_NAME, JSON.stringify(updatedParts));
+    window.localStorage.setItem(PISIGHT_LOCAL_STORAGE_NAME, JSON.stringify(allVisitedConditionalParts));
+
+    if (VERBOSE > 1) {
+        var i = 0;
+        for (k of Object.keys(allVisitedConditionalParts)) {
+            i += 1;
+            console.log(i, "current allVisitedConditionalParts: ", JSON.stringify(allVisitedConditionalParts[k]));
+        }
+    }
 }
 
 async function piSightMain(overrideCorePath) {
@@ -273,38 +276,52 @@ async function piSightMain(overrideCorePath) {
         return;
     }
 
+    var allVisitedConditionalParts = getAllPreviousParts();
+    var isNewVisitor;
+    var isConsistent = isConsistentAspect(allVisitedConditionalParts, allPageMetrics);
+    if (!isConsistent) {
+        isNewVisitor = true;
+        allVisitedConditionalParts = []; 
+        resetPiSightStorage();
+    } else {
+        isNewVisitor = false;
+    }
+
     var userMetrics = {};
-    var uploadParts = {};
     var flags = {};
+    var pageConditionalParts = {};
+
     for (let aspectName of ASPECTS) {
         let [aspectKYields, aspectProportion] = getOneAspectMetrics(aspectName, allPageMetrics);
         let currentAspectParts = calcOneAspectParts(aspectKYields, aspectProportion, traffic);
-
-        if (hasPreviousParts()) {
-            previousAspectParts = loadPreviousParts(aspectName, aspectKYields);
-            updatedParts = calcOneCulmulativeParts(previousAspectParts, currentAspectParts);
-        } else {
-            updatedParts = currentAspectParts;
+        let culmulativeParts = currentAspectParts;
+        if (!isNewVisitor) {
+            for (let [i, previousAspectParts] of allVisitedConditionalParts.map((part) => part[aspectName]).entries()) {
+                culmulativeParts = calcOneCulmulativeParts(previousAspectParts, culmulativeParts);
+                if (VERBOSE == -1) {
+                    console.log(`${aspectName}:  ${i},  culmulativeParts: , `, culmulativeParts);
+                }
+            }
         }
+        let [probability, flag] = calcOneAspectBayesianProbability(culmulativeParts, aspectProportion);
 
-        let [probability, flag] = calcOneAspectBayesianProbability(updatedParts, aspectProportion);
-
-        uploadParts = { ...uploadParts, [aspectName]: updatedParts };
+        pageConditionalParts = { ...pageConditionalParts, [aspectName]: currentAspectParts };
         userMetrics = { ...userMetrics, [aspectName]: probability };
         flags = { ...flags, [aspectName]: flag };
     }
 
     visitedPages.push(corePath); // including this new path to visited pages
+    allVisitedConditionalParts.push(pageConditionalParts);
     var userProfiles = {
         userMetrics: userMetrics,
         potentialFlags: flags,
         visitedPages: visitedPages,
     };
 
-    storePiSightProfile(userProfiles);
-    storeCulmulativeParts(uploadParts);
+    storePiSightProfile(userProfiles); // current user profile
+    storeVisitedParts(allVisitedConditionalParts);
 
-    if (VERBOSE) {
+    if (VERBOSE > 0) {
         identifySignal(userProfiles);
         const byteSize = (str) => new Blob([str]).size;
         console.log(
@@ -317,19 +334,21 @@ async function piSightMain(overrideCorePath) {
 async function piSightMainTest() {
     resetPiSightStorage();
     TEST_INPUTS = [
-        "/en-us.html",
-        "/capabilities/academy-advanced-manufacturing.html",
-        "/support/customer-care.html",
-        "/support/product/product-compatibility-migration/migration-modernization.html",
-        "/products/hardware/allen-bradley/motion-control.html",
-        "/products/software/factorytalk/designsuite/emulate.html",
-        "/products/software/factorytalk/operationsuite/mes/plex-quality-management-system.html",
-        "/products/software/factorytalk/designsuite.html",
-        "/products/software/factorytalk/designsuite/studio-5000/studio-5000-architect.html",
-        "/products/software/factorytalk/designsuite/logix-echo.html",
-        "/products/software/factorytalk/designsuite/studio-5000/simulation-interface.html",
+        "/products/details.700-hk32z12-4.html",
+        "/products/details.2711p-t6m20d.html",
+        "/products/details.800f-n3w.html",
+        "/products/hardware/allen-bradley/relays-and-timers/general-purpose-timing-relays-and-counters/700-ht-tube-base.html",
+        "/products/details.6200t-15wa.html",
+        "/products/details.42af-p2mab1-f4.html",
+        "/products/details.1794-ie8.html",
+        "/products/details.4983-ds480-403.html",
+        "/company/news/case-studies/pyradia-pilot-coating.html",
+        "/products/details.2198-e1004-ers.html",
+        "/products/hardware/allen-bradley/motion-control/linear-servo-motors.html",
+        "/products/details.700-hc22a1-99.html"
     ];
-    for (let overridePage of TEST_INPUTS) {
+    for (let [i, overridePage] of TEST_INPUTS.entries()) {
+        console.log(i);
         await piSightMain(overridePage);
     }
 }
@@ -339,10 +358,10 @@ const ASPECTS = ["lead", "role", "industry"];
 const SERVLET_PATH = window.location.origin + "/bin/rockwell-automation/content-score";
 const PISIGHT_LOCAL_STORAGE_NAME = "piSight";
 const PISIGHT_PROFILE_LOCAL_STORAGE_NAME = "piSightProfile";
-const IS_LOG_VERSION = false;
-const VERBOSE = true;
-
+const IS_LOG_VERSION = false; // NOT SUPPORT LOG VERSION YET
+const VERBOSE = 4;
+const MAX_TRACKING_LENGTH = 20;
 // resetPiSightStorage();
-// await piSightMain();
+await piSightMain();
 
-await piSightMainTest();
+// await piSightMainTest();
