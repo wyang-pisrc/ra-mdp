@@ -20,7 +20,7 @@ if __name__ == '__main__':
     snapshots_files = sorted(glob(config["snapshot-export"]["path"]+"*.csv"))
     key = config["analyzer"]["key"]
     min_count = config["analyzer"].getint("min_count")
-    version = config["analyzer"]["report_version"]
+    version = config["report-export"]["report_version"]
 
     print("Start aggregating and analyzing...")
     pageAnalyzer = Analyzer(key, snapshots_files, config["report-export"]["path"])
@@ -60,8 +60,9 @@ if __name__ == '__main__':
     ################################ 
     le = LabelEncoder()
     encode_urls = le.fit_transform(bayesian_metrics.index)
-    np.save('./report/encode_urls.npy', le.classes_)
+    np.save(f'./report/encode_urls_{version}.npy', le.classes_)
     print("largest code:", max(encode_urls))
+    le_dict = {v: k for k, v in enumerate(le.classes_)}
     
     
     ################################
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         request_list["page_code"] = request_list["page_code"].apply(eval)
     else: 
         test_sample_size = None
-        files = sorted(glob("./data/aemRaw_keyColumns_2022*"))[-4::]
+        files = sorted(glob("./data/aemRaw_keyColumns_2022*p1v1.csv.gz"))
         dfs = pd.DataFrame()
         for file in files:
             print("loading: ", file)
@@ -84,24 +85,24 @@ if __name__ == '__main__':
         print("Finish loading")
 
         print("Aggregating user request list")    
+        
+        if unique_only:
+            dfs = dfs.drop_duplicates()
+            
         filter_dfs = dfs[dfs["clean_PageURL"].isin(le.classes_)]
-        filter_dfs.loc[:, "page_code"] = le.transform(filter_dfs["clean_PageURL"].tolist())
+        filter_dfs.loc[:, "page_code"] = filter_dfs["clean_PageURL"].map(le_dict)
         request_list = filter_dfs[["mcvisid", "page_code"]].groupby("mcvisid").apply(lambda x: x["page_code"].tolist()).rename("page_code").reset_index()
-        request_list["unique_page_code"] = request_list["page_code"].apply(lambda x: list(set(x)))
+        request_list["valid_request_count"] = request_list["page_code"].apply(len)
         request_list.to_csv(f"./report/mcvisid_request_list_{version}.csv")
     print("Loaded request list report")
         
-        
-    if unique_only:
-        request_list["page_code"] = request_list["unique_page_code"]
-        request_list.drop(columns=["unique_page_code"],inplace=True)
     
     print("Processing probability")
+    
     request_list_prob = Analyzer.mcvisid_probs(request_list, le, panel_report, bayesian_metrics, labelProportion)
     request_list_prob.to_csv(f"./report/mcvisid_request_list_probs-server_{version}.csv")
     # request_list_prob.to_excel("./report/mcvisid_request_list_probs.xlsx")
-    request_list_prob["request_count"] = request_list_prob["page_code"].apply(len)
-    target_list = request_list_prob[(request_list_prob["request_count"]>5) & (request_list_prob["request_count"]<500)]
+    target_list = request_list_prob[(request_list_prob["valid_request_count"]>5) & (request_list_prob["valid_request_count"]<500)]
     target_list.to_excel(f"./report/mcvisid_request_list_probs_target_{version}.xlsx")
     
     ################################
