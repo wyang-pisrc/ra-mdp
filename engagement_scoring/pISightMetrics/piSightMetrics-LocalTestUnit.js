@@ -25,6 +25,15 @@ async function piSightMainTest() {
         "/company/events/in-person-events/automation-fair.html",
         "/index.html",
         "/support.html",
+        "/products/details.1756-cn2r.html",
+        "/company/events/in-person-events/automation-fair/virtual-experience.html",
+        "/products/hardware/allen-bradley/network-security-and-infrastructure/gateway-linking-devices/1788-ethernet-ip-to-devicenet.html",
+        "/search.html",
+        "/capabilities/process-solutions/process-systems/plantpax-distributed-control-system.html",
+        "/capabilities/process-solutions/process-systems/plantpax-distributed-control-system/plantpax-5-0-technical-features---library-of-process-objects.html",
+        "/products.html",
+        "/capabilities.html",
+        "/support/customer-care.html"
     ];
     for (let [i, overridePage] of TEST_INPUTS.entries()) {
         console.log(`${i}-url: ${overridePage}`);
@@ -33,5 +42,5 @@ async function piSightMainTest() {
 }
 
 resetPiSightStorage();
-PISIGHT_VERBOSE = 2;
+SHOW_DEBUG = true;
 await piSightMainTest();
