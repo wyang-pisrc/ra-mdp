@@ -44,6 +44,14 @@ python -m pipenv install apscheduler
 5. find two or more different prediction result that make sense
 6. backtest result - accuracy
 
+## Naming
+1. Query Loader
+1. Batch Transformer = ETL
+2. Processing = Analyzer
+2. AEM Scheduler = Model Serving
+2. Real-Time Inference = API hosting
+3. 
+
 
 
 ### tracking parts -> losing digits in the end by multiply.

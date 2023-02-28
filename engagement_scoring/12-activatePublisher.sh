@@ -1,0 +1,3 @@
+curl -k -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -F "path=/content/dam/rockwell-automation/sites/data/page_scores.json" -F "cmd=activate" https://author1.dev.rockwellautomation.adobecqms.net/bin/replicate.json
+curl -k -u ra-content-score-user:$CONTENT_SCORE_ADMIN_PW -F "path=/content/dam/rockwell-automation/sites/data/page_scores.json" -F "cmd=activate" https://author1.stage.rockwellautomation.adobecqms.net/bin/replicate.json
+curl -k -u ra-content-score-user:$PROD_CONTENT_SCORE_ADMIN_PW -F "path=/content/dam/rockwell-automation/sites/data/page_scores.json" -F "cmd=activate" https://author1.prod.rockwellautomation.adobecqms.net/bin/replicate.json

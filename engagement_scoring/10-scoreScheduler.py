@@ -21,13 +21,13 @@ def main(isTest=False):
         # os.system("python -m pipenv run python 4-report.py")
 
         # upload to AEM target servers
-        os.system("./11-postJsonMetrics.sh")
-        print("Waiting AEM processing for 60s.")
+        # os.system("./11-postJsonMetrics.sh")
         
-        time.sleep(60)
+        # time.sleep(30)
+        # os.system("./12-activatePublisher.sh")
         
-        os.system("./12-refreshHashMap.sh")
-        print("refresh hashmap in different envs.")
+        # time.sleep(30)
+        # os.system("./13-refreshHashMap.sh")
       
       except Exception as error:
         ### if error message, send email to wyang
@@ -37,7 +37,7 @@ def main(isTest=False):
   if isTest is False:
     # schedule task
     sched = BlockingScheduler()
-    sched.add_job(scheduledtask, 'interval', hours=6, id='update_pagescores_json')
+    sched.add_job(scheduledtask, 'interval', days=6, id='update_pagescores_json')
     sched.start()
   else:
     # local testing
