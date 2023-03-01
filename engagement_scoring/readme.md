@@ -14,8 +14,10 @@ python -m pipenv install apscheduler
 ### scheduler to sync result to AEM
 1. Find the credential for ra-content-score-user from 1password. The password starts with _jTK
 2. Store the password into local variable by `export CONTENT_SCORE_ADMIN_PW={the pass word you find on 1password};`
-3. Run the shell script under this directory to upload the json file in current directory to AEM servers: `./postJson-wyang.sh`
-	- it will refresh the hashmap in servlet by the post request as well in the scripts
+3. Run the shell script under this directory to upload the json file in current directory to AEM servers: 
+	- `os.system("./11-postJsonMetrics.sh")`
+	- `os.system("./12-activatePublisher.sh")`
+	- `os.system("./13-refreshHashMap.sh")`
 
 
 ## Automated scheduled task
@@ -30,11 +32,12 @@ python -m pipenv install apscheduler
 
 
 ## TODO
-1. change the probability calculation into exponential log plus (how to math.exp of BigDecimal)
 2. data align and compare
-3. Update the tracking visit list as a set
+3. Multi-class prediction adaptation
+4. simplify the Analyzer class logic
 
 ### Done
+1. change the probability calculation into exponential log plus (how to math.exp of BigDecimal) (only implement with python)
 4. add the calculation result into cookie
 3. config the ra-content-score-user in stage properly
 3. add stage env into curl post request
@@ -43,14 +46,16 @@ python -m pipenv install apscheduler
 3. add edge case examination -> stable
 5. find two or more different prediction result that make sense
 6. backtest result - accuracy
+3. Update the tracking visit list as a set
 
 ## Naming
 1. Query Loader
 1. Batch Transformer = ETL
-2. Processing = Analyzer
-2. AEM Scheduler = Model Serving
-2. Real-Time Inference = API hosting
-3. 
+3. Data Wrangler = Data Exploratory Processing 
+2. Modeling = Analyzer = Trainer 
+2. AEM Scheduler = Model deployment
+2. Real-Time Inference = API hosting = Model Serving = Servlet/AWS Lambda 
+
 
 
 

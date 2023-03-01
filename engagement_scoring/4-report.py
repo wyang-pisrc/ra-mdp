@@ -76,7 +76,7 @@ if __name__ == '__main__':
         request_list["page_code"] = request_list["page_code"].apply(eval)
     else: 
         test_sample_size = None
-        files = sorted(glob("./data/aemRaw_keyColumns_2022*p1v1.csv.gz"))
+        files = sorted(glob("./data/aemRaw_keyColumns_202*p1v1.csv.gz"))
         dfs = pd.DataFrame()
         for file in files:
             print("loading: ", file)
@@ -93,14 +93,14 @@ if __name__ == '__main__':
         filter_dfs.loc[:, "page_code"] = filter_dfs["clean_PageURL"].map(le_dict)
         request_list = filter_dfs[["mcvisid", "page_code"]].groupby("mcvisid").apply(lambda x: x["page_code"].tolist()).rename("page_code").reset_index()
         request_list["valid_request_count"] = request_list["page_code"].apply(len)
-        request_list.to_csv(f"./report/mcvisid_request_list_{version}.csv")
+        request_list.to_csv(f"./report/mcvisid_request_list_{version}.csv.gz", compression="gzip")
     print("Loaded request list report")
         
     
     print("Processing probability")
     
     request_list_prob = Analyzer.mcvisid_probs(request_list, le, panel_report, bayesian_metrics, labelProportion)
-    request_list_prob.to_csv(f"./report/mcvisid_request_list_probs-server_{version}.csv")
+    request_list_prob.to_csv(f"./report/mcvisid_request_list_probs-server_{version}.csv.gz", compression="gzip")
     # request_list_prob.to_excel("./report/mcvisid_request_list_probs.xlsx")
     target_list = request_list_prob[(request_list_prob["valid_request_count"]>5) & (request_list_prob["valid_request_count"]<500)]
     target_list.to_excel(f"./report/mcvisid_request_list_probs_target_{version}.xlsx")
