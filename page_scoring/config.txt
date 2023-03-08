@@ -6,3 +6,7 @@ db = rockwell
 
 [data-import]
 dataPath = /Volumes/Flyte/content-scoring/
+versionFlag = p1v1.csv.gz
+
+[processing]
+isTestMode = False

@@ -6,6 +6,7 @@ import socket, struct
 import configparser
 from dateutil.parser import parse
 from datetime import datetime
+import pandas as pd
 
 timestampPattern = re.compile('^[0-9]+\-[0-9]+\-[0-9]+ [0-9]+:[0-9]+:[0-9]+\-[0-9]+:[0-9]+$')
 
@@ -48,7 +49,11 @@ files=[
     config['data-import']['datapath'] + "aemRaw_keyColumns_20221101-20221115.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20221115-20221130.csv",
     config['data-import']['datapath'] + "aemRaw_keyColumns_20221201-20221215.csv",
-    config['data-import']['datapath'] + "aemRaw_keyColumns_20221215-20221231.csv"
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20221215-20221231.csv",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20230101-20230115_p1v1.csv.gz",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20230115-20230131_p1v1.csv.gz",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20230201-20230215_p1v1.csv.gz",
+    config['data-import']['datapath'] + "aemRaw_keyColumns_20230215-20230228_p1v1.csv.gz",
 ]
 
 """
@@ -82,25 +87,70 @@ files=[
     BingeScoredAssetPath : /content/dam/rockwell-automation/sites/downloads/pdf/auto-ar001_-en-p.pdf
     BingeScoredAssetPath : /content/rockwell-automation/www/na/us/en_US/company/news/case-studies/maximum-transparency-across-all-levels-at-samsung-sdi-battery-sy.html
     BingeScoredAssetPath : /content/dam/rockwell-automation/videos/capabilities/machine-and-equipment-builders/the-augmented-workforce/the-augmented-workforce-en.mp4
+    
+    
+    mapping from 0 : SessionVisitorId
+    mapping from 1 : VisitPageNumber
+    mapping from 2 : VisitNumber
+    mapping from 3 : NewVisit
+    mapping from 4 : EventList
+    mapping from 5 : DateTime_UTC 5 -> 0
+    mapping from 6 : PageURL 6 -> 1
+    mapping from 7 : VisitReferrer 7 -> 2
+    mapping from 8 : VisitReferrerType
+    mapping from 9 : VisitorDomain 9 -> 3
+    mapping from 10 : External_Audience
+    mapping from 11 : External_AudienceSegment
+    mapping from 12 : External_Industry
+    mapping from 13 : External_Website
+    mapping from 14 : EloquaContactId 14 -> 4
+    mapping from 15 : EloquaGUID
+    mapping from 16 : mcvisid 16 -> 5
+    mapping from 17 : GeoCity
+    mapping from 18 : GeoCountry 18 -> 6
+    mapping from 19 : GeoRegion
+    mapping from 20 : PDFurl
+    mapping from 21 : PDFpagecount
+    mapping from 22 : BingeId
+    mapping from 23 : BingeCriticalScore
+    mapping from 24 : BingeScoredAssetPath 24 -> 7
+    mapping from 25 : BingeScoredAssetScore
 """
+
+VERSION_FLAG = config['data-import']['versionFlag']
 
 for file in files:
     print("Working on %s" % file)
-    csv_data = csv.reader(open(file, 'r'), delimiter=',', quotechar='"')
-    next(csv_data)
+    
+    if VERSION_FLAG in file:
+        df = pd.read_csv(file, compression="gzip", dtype=str).fillna("")
+        csv_data = df.iterrows()
+    else:
+        csv_data = csv.reader(open(file, 'r'), delimiter=',', quotechar='"')
+        next(csv_data)
+        
     stmt = "INSERT INTO aem_data (DateTime, PageURL, EloquaContactId, mcvisid, GeoCountry) VALUES (%s, \"%s\", '%s', '%s', '%s')"
 
     i=0;
     for row in csv_data:
         try:
-            DateTimeString=str(row[5])[0:19]
-            PageURL=str(row[6] or None).lower()
-            EloquaContactId=str(row[14] or None).upper()
-            mcvisid=str(row[16]) or None
-            GeoCountry=str(row[18]) or None
+            if VERSION_FLAG in file:
+                idx, row = row # first element is index of row
+                DateTimeString=str(row[0])[0:19]
+                PageURL=str(row[1] or None).lower()
+                EloquaContactId=str(row[4] or None).upper()
+                mcvisid=str(row[5]) or None
+                GeoCountry=str(row[6]) or None
+                BingeAssetPath=str(row[7]) or None
+            else:
+                DateTimeString=str(row[5])[0:19]
+                PageURL=str(row[6] or None).lower()
+                EloquaContactId=str(row[14] or None).upper()
+                mcvisid=str(row[16]) or None
+                GeoCountry=str(row[18]) or None
+                BingeAssetPath=str(row[24]) or None
+            
             DateTime="".join(["STR_TO_DATE(\"",DateTimeString, "\",\"%Y-%m-%d %H:%i:%S\")"])
-            BingeAssetPath=str(row[24]) or None
-
             executableStmt=stmt % (DateTime,PageURL,EloquaContactId,mcvisid,GeoCountry)
             cursor.execute(executableStmt)
 
@@ -115,6 +165,11 @@ for file in files:
         i+=1
         if (i%100 == 0):
             mydb.commit()
+        
+        if config['processing'].getboolean('isTestMode'):
+            print("Test mode, breaking after 100 rows")
+            break
+        
     mydb.commit()
     cursor.execute("UPDATE aem_data set EloquaContactId = NULL WHERE EloquaContactId = 'NONE'")
     mydb.commit()

@@ -11,7 +11,7 @@ def datetime_interval_iterator(event_start_month=4, event_end_month=12, start_ye
 
     days = ["01", "15", "31"]
     day_pair = list(zip(days, days[1:]))
-    month_max_days = {"04":"30", "06":"30","09":"30","11":"30"}
+    month_max_days = {"02": "28", "04":"30", "06":"30","09":"30","11":"30"}
     
     for current_year in range(start_year, end_year+1):
         if start_year == end_year:
@@ -32,7 +32,7 @@ def datetime_interval_iterator(event_start_month=4, event_end_month=12, start_ye
                     start_month, end_month = _end_month, _end_month
 
                 if (end_month in month_max_days.keys()) & (end_day == "31"):
-                    end_day = "30"
+                    end_day = month_max_days[end_month]
 
                 print(f"Range month: {current_year}{start_month}{start_day}-{current_year}{end_month}{end_day}")
                 yield current_year, start_month, start_day, end_month, end_day

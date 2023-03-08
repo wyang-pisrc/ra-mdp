@@ -18,10 +18,11 @@
   `statuscodename` varchar(42) DEFAULT NULL,
   `ra_salesacceptedname` varchar(5) DEFAULT NULL,
   `address1_country` varchar(32) DEFAULT NULL,
-  PRIMARY KEY (`leadid`),
+   KEY (`leadid`),
   KEY `crm_email_idx` (`emailaddress1`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+// PRIMARY KEY (`leadid`) => KEY (`leadid`)
 GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
 
 4. python importCrmData.py (fast)
@@ -30,9 +31,12 @@ GRANT ALL PRIVILEGES ON page_scoring.* TO 'rockwell'@'localhost';
 5. CREATE TABLE `eloqua_data` (
   `EloquaContactId` varchar(32) NOT NULL,
   `EmailAddress` varchar(128) NOT NULL,
-  PRIMARY KEY (`EloquaContactId`),
+   KEY (`EloquaContactId`),
   KEY `email_idx` (`EmailAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+// PRIMARY KEY (`EloquaContactId`),=> KEY (`EloquaContactId`)
+
 
 6. python importEloquaData.py (~30 min)
 ---- 7859709 records
